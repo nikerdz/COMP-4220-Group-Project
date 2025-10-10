@@ -3,9 +3,10 @@
  * Permission required material. Contact: xyuan@uwindsor.ca 
  * *******************************************************************************-->
 
-<Window x:Class="BookStoreGUI.MainWindow"
+<Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:av="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="av" x:Class="BookStoreGUI.MainWindow"
         Title="BookStore" Height="484" Width="550" Loaded="Window_Loaded">
     <Grid>
         <StackPanel x:Name="LayoutRoot" DataContext="{Binding}"
@@ -30,7 +31,7 @@
 		ItemsSource="{Binding drCat_Book}"
 		x:Name="ProductsDataGrid" RowDetailsVisibilityMode="VisibleWhenSelected"
 		Width="490" HorizontalAlignment="Left" Margin="20,0,20,10"
-		SelectionMode="Single">
+		SelectionMode="Single" SelectionChanged="ProductsDataGrid_SelectionChanged">
                 <DataGrid.Columns>
                     <DataGridTextColumn
 			x:Name="titleColumn" Binding="{Binding Title}"
@@ -46,28 +47,33 @@
 			Header="Year" Width="8*" />
                 </DataGrid.Columns>
             </DataGrid>
+
             <StackPanel Orientation="Vertical">
                 <ListView x:Name="orderListView" MinHeight="150" Width="490"
-		    ItemsSource="{Binding}" SelectionMode="Single">
+		    ItemsSource="{Binding}" SelectionMode="Single" av:ItemsSource="{av:SampleData ItemCount=5}">
                     <ListView.View>
                         <GridView>
                             <GridViewColumn Width="80" Header="ISBN"
 				DisplayMemberBinding="{Binding BookID}" />
                             <GridViewColumn Width="285" Header="Title"
-				DisplayMemberBinding="{Binding BookTitle}" />
+				DisplayMemberBinding="{Binding Title}" />
                             <GridViewColumn Width="60" Header="Quantity"
 				DisplayMemberBinding="{Binding Quantity}" />
                             <GridViewColumn Width="60" Header="Subtotal"
-				DisplayMemberBinding="{Binding SubTotal}" />
+				DisplayMemberBinding="{Binding Subtotal}" />
                         </GridView>
                     </ListView.View>
                 </ListView>
-            </StackPanel>
+         </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
                 <Button x:Name="addButton" MinHeight="25" MinWidth="80"
-		    Content="Add Book" Click="addButton_Click" />
-                <Button x:Name="checkoutOrderButton" MinHeight="25" MinWidth="80"
-		    Content="Proceed to Checkout" Click="chechoutButton_Click" Width="121" Margin="286,0,0,0"/>
+		                Content="Add" Click="addButton_Click" Margin="5"/>
+                <Button x:Name="removeButton" MinHeight="25" MinWidth="80"
+                        Content="Remove" Click="removeButton_Click" Margin="5"/>
+                <Button x:Name="clearCart" MinHeight="25" MinWidth="80"
+                        Content="Clear" Click="clearCart_Click" Margin="5"/>
+                <Button x:Name="checkoutOrderButton" MinHeight="25" MinWidth="210"
+		                Content="Proceed to Checkout" Click="checkoutButton_Click" Margin="5"/>
             </StackPanel>
         </StackPanel>
         <StatusBar VerticalAlignment="Bottom" HorizontalAlignment="Stretch">
