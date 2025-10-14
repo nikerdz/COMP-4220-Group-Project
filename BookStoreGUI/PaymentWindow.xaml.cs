@@ -27,7 +27,9 @@ namespace BookStoreGUI
         private void btnPay_Click(object sender, RoutedEventArgs e)
         {
             // optional to add: 
-            // Gmail has to have the @ sign
+            // house address, postal code, city etc
+            // for province I can have a drop down option with city names (we will keep our country location to be only Canada in that case)
+            // Also as of right now when we click pay now nothing shows up 
 
             string name = txtCardName.Text;
             string number = txtCardNumber.Text;
@@ -54,6 +56,7 @@ namespace BookStoreGUI
             try
             {
                 _ = new System.Net.Mail.MailAddress(email); // This line uses .NET’s built-in class MailAddress to check is the email is valid or not 
+                // _ means we are only creating a object to test validity, we dont need to store it anywhere
             }
             catch
             {
