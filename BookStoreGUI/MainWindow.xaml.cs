@@ -16,31 +16,47 @@ namespace BookStoreGUI
     /// Interaction logic for MainWindow.xaml
     public partial class MainWindow : Window
     {
+        private UserData userData;
         private void loginButton_Click(object sender, RoutedEventArgs e)
         {
-            var userData = new UserData();
+            userData = new UserData();
             var dlg = new LoginDialog();
             dlg.Owner = this;
             dlg.ShowDialog();
 
             if (dlg.DialogResult == true)
             {
-               try
+                try
                 {
-                   if (userData.LogIn(dlg.nameTextBox.Text, dlg.passwordTextBox.Password))
+                    if (userData.LogIn(dlg.nameTextBox.Text, dlg.passwordTextBox.Password))
                     {
-                       this.statusTextBlock.Text = "You are logged in as User #" + userData.UserID;
+                        statusTextBlock.Text = "You are logged in as: " + userData.LoginName;
+                        statusTextBlock.Foreground = Brushes.Black;
+
+                        loginButton.Visibility = Visibility.Collapsed;
+                        logoutButton.Visibility = Visibility.Visible;
                     }
-                   else
+                    else
                     {
-                       MessageBox.Show("You could not be verified. Please try again.");
+                        MessageBox.Show("You could not be verified. Please try again.");
                     }
                 }
-               catch (ArgumentException ex)
+                catch (ArgumentException ex)
                 {
-                   MessageBox.Show(ex.Message); // show validation errors
+                    MessageBox.Show(ex.Message); // show validation errors
                 }
             }
+        }
+
+        private void logoutButton_Click(object sender, RoutedEventArgs e)
+        {
+            userData = null; 
+            statusTextBlock.Text = "Please login before proceeding to checkout.";
+            statusTextBlock.Foreground = Brushes.Black;
+
+            loginButton.Visibility = Visibility.Visible;
+            logoutButton.Visibility = Visibility.Collapsed;
+
         }
 
         private void exitButton_Click(object sender, RoutedEventArgs e) { this.Close(); }
@@ -129,5 +145,7 @@ namespace BookStoreGUI
             statusTextBlock.Foreground = Brushes.Green;
         }
         private void checkoutButton_Click(object sender, RoutedEventArgs e) { } // checkout method later?
+
+
     }
 }

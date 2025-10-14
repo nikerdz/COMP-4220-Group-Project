@@ -23,7 +23,9 @@
                     </ComboBox.ItemsPanel>
                 </ComboBox>
                 <Button Content="Login" Height="25" x:Name="loginButton"
-		    Width="75" Margin="28,2,0,0" Click="loginButton_Click" />
+    Width="75" Margin="28,2,0,0" Click="loginButton_Click" Visibility="Visible" />
+                <Button Content="Logout" Height="25" x:Name="logoutButton"
+    Width="75" Margin="28,2,0,0" Click="logoutButton_Click" Visibility="Collapsed" />
                 <Button Content="Exit" Height="25" x:Name="exitButton"
 		    Width="75" Margin="20,2,0,0" Click="exitButton_Click" />
             </StackPanel>
