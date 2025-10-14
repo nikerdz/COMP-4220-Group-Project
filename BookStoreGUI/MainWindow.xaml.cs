@@ -12,6 +12,12 @@ namespace BookStoreGUI
     /// Interaction logic for MainWindow.xaml
     public partial class MainWindow : Window
     {
+        private void registerButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Placeholder message
+            MessageBox.Show("Register button clicked - Next implement backend logic", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
         private void loginButton_Click(object sender, RoutedEventArgs e)
         {
             var userData = new UserData();

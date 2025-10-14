@@ -22,9 +22,11 @@
                     </ComboBox.ItemsPanel>
                 </ComboBox>
                 <Button Content="Login" Height="25" x:Name="loginButton"
-		    Width="75" Margin="28,2,0,0" Click="loginButton_Click" />
+		    Width="50" Margin="28,2,0,0" Click="loginButton_Click" />
+                <Button Content="Register" Height="25" x:Name="registerButton" 
+            Width="50" Margin="10,2,0,0" Click="registerButton_Click" />
                 <Button Content="Exit" Height="25" x:Name="exitButton"
-		    Width="75" Margin="20,2,0,0" Click="exitButton_Click" />
+		    Width="50" Margin="10,2,0,0" Click="exitButton_Click" />
             </StackPanel>
             <DataGrid AutoGenerateColumns="False" Height="165" 
 		ItemsSource="{Binding drCat_Book}"
