@@ -37,7 +37,6 @@ namespace BookStoreGUI
                     if (userData.LogIn(dlg.nameTextBox.Text, dlg.passwordTextBox.Password))
                     {
                         statusTextBlock.Text = "You are logged in as: " + userData.LoginName;
-                        statusTextBlock.Foreground = Brushes.Black;
 
                         loginButton.Visibility = Visibility.Collapsed;
                         logoutButton.Visibility = Visibility.Visible;
@@ -58,7 +57,6 @@ namespace BookStoreGUI
         {
             userData = null; 
             statusTextBlock.Text = "Please login before proceeding to checkout.";
-            statusTextBlock.Foreground = Brushes.Black;
 
             loginButton.Visibility = Visibility.Visible;
             logoutButton.Visibility = Visibility.Collapsed;

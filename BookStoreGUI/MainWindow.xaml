@@ -26,7 +26,6 @@
     Width="75" Margin="28,2,0,0" Click="loginButton_Click" Visibility="Visible" />
                 <Button Content="Logout" Height="25" x:Name="logoutButton"
     Width="75" Margin="28,2,0,0" Click="logoutButton_Click" Visibility="Collapsed" />
-		    Width="50" Margin="28,2,0,0" Click="logoutButton_Click" />
                 <Button Content="Register" Height="25" x:Name="registerButton" 
             Width="50" Margin="10,2,0,0" Click="registerButton_Click" />
                 <Button Content="Exit" Height="25" x:Name="exitButton"
