@@ -1,4 +1,4 @@
-﻿/* **********************************************************************************
+/* **********************************************************************************
  * For use by students taking 60-422 (Fall, 2014) to work on assignments and project.
  * Permission required material. Contact: xyuan@uwindsor.ca 
  * **********************************************************************************/
@@ -17,6 +17,12 @@ namespace BookStoreGUI
     public partial class MainWindow : Window
     {
         private UserData userData;
+        private void registerButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Placeholder message
+            MessageBox.Show("Register button clicked - Next implement backend logic", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
         private void loginButton_Click(object sender, RoutedEventArgs e)
         {
             userData = new UserData();
