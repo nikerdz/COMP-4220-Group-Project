@@ -134,6 +134,14 @@ namespace BookStoreGUI
             statusTextBlock.Text = "SUCCESS: Cart cleared!";
             statusTextBlock.Foreground = Brushes.Green;
         }
-        private void checkoutButton_Click(object sender, RoutedEventArgs e) { } // checkout method later?
+        private void checkoutButton_Click(object sender, RoutedEventArgs e) {
+            if (cart.shoppingCart.Count == 0)
+            {
+                MessageBox.Show("Your cart is empty.");
+                return;
+            }
+            var pay = new PaymentWindow();
+            pay.ShowDialog();
+        } 
     }
 }
