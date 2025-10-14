@@ -124,6 +124,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <DependentUpon>BookStoreDB.mdf</DependentUpon>
     </Content>
+    <Content Include="Database\Scripts\20251013_AddCartTable.sql" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.7.2">
