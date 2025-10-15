@@ -29,8 +29,9 @@ namespace BookStoreGUI
             // optional to add: 
             // house address, postal code, city etc
             // for province I can have a drop down option with city names (we will keep our country location to be only Canada in that case)
-            // Also as of right now when we click pay now nothing shows up 
-
+            // Reciept option, or summary of order can be sprint 2
+            // 
+            // I want there to be a 'are you sure' when order is being placed with the total amount 
             string name = txtCardName.Text;
             string number = txtCardNumber.Text;
             string expiry = txtExpiry.Text;
@@ -63,6 +64,21 @@ namespace BookStoreGUI
                 MessageBox.Show("Invalid email.");
                 return;
             }
+
+            // All validation passed — show success to the user
+            MessageBox.Show("Your order has been successfully placed.", "Payment Successful", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            // Later we can implement the order message to show the summary of the books ordered with the prices 
+
+            // Clearing fields after successful payment
+            // Better for security purposes (if poeple are looking at the screen)
+            // Avoids duplicate submissions from the customer 
+            txtCardName.Clear();
+            txtExpiry.Clear();
+            txtCVV.Clear();
+
+            // Close the payment window after success
+            this.Close();
 
         }
 

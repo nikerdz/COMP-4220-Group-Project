@@ -140,6 +140,7 @@ namespace BookStoreGUI
                 MessageBox.Show("Your cart is empty.");
                 return;
             }
+            // When i want to pass the cart contents to the payment window so it can show a summary i will add cart.shoppingCart in the parantheses
             var pay = new PaymentWindow();
             pay.ShowDialog();
         } 
