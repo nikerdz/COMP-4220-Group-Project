@@ -55,12 +55,40 @@ namespace BookStoreGUI
 
         private void logoutButton_Click(object sender, RoutedEventArgs e)
         {
-            userData = null; 
+            //check if cart is not empty
+            if (cart.shoppingCart != null && cart.shoppingCart.Count > 0)
+            {
+                //messagebox display to user
+                var result = MessageBox.Show(
+                    "Your cart is not empty. Would you like to clear the cart before logging out?",
+                    "Confirm Logout",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    clearCart_Click(sender, e);
+                    PerformLogout();
+                }
+                //messageboxresult.no just do nothing
+            }
+            //cart is empty and user wants to logout
+            else
+            {
+                PerformLogout();
+            }
+        }
+
+        private void PerformLogout()
+        {
+            userData = null;
             statusTextBlock.Text = "Please login before proceeding to checkout.";
 
             loginButton.Visibility = Visibility.Visible;
             logoutButton.Visibility = Visibility.Collapsed;
 
+            statusTextBlock.Text = "You have been logged out.";
+            statusTextBlock.Foreground = Brushes.Black;
         }
 
         private void exitButton_Click(object sender, RoutedEventArgs e) { this.Close(); }
