@@ -1,4 +1,4 @@
-﻿/* **********************************************************************************
+/* **********************************************************************************
  * For use by students taking 60-422 (Fall, 2014) to work on assignments and project.
  * Permission required material. Contact: xyuan@uwindsor.ca 
  * **********************************************************************************/
@@ -16,6 +16,7 @@ namespace BookStoreGUI
     /// Interaction logic for MainWindow.xaml
     public partial class MainWindow : Window
     {
+        private UserData userData;
         private void registerButton_Click(object sender, RoutedEventArgs e)
         {
             // Placeholder message
@@ -24,29 +25,70 @@ namespace BookStoreGUI
 
         private void loginButton_Click(object sender, RoutedEventArgs e)
         {
-            var userData = new UserData();
+            userData = new UserData();
             var dlg = new LoginDialog();
             dlg.Owner = this;
             dlg.ShowDialog();
 
             if (dlg.DialogResult == true)
             {
-               try
+                try
                 {
-                   if (userData.LogIn(dlg.nameTextBox.Text, dlg.passwordTextBox.Password))
+                    if (userData.LogIn(dlg.nameTextBox.Text, dlg.passwordTextBox.Password))
                     {
-                       this.statusTextBlock.Text = "You are logged in as User #" + userData.UserID;
+                        statusTextBlock.Text = "You are logged in as: " + userData.LoginName;
+
+                        loginButton.Visibility = Visibility.Collapsed;
+                        logoutButton.Visibility = Visibility.Visible;
                     }
-                   else
+                    else
                     {
-                       MessageBox.Show("You could not be verified. Please try again.");
+                        MessageBox.Show("You could not be verified. Please try again.");
                     }
                 }
-               catch (ArgumentException ex)
+                catch (ArgumentException ex)
                 {
-                   MessageBox.Show(ex.Message); // show validation errors
+                    MessageBox.Show(ex.Message); // show validation errors
                 }
             }
+        }
+
+        private void logoutButton_Click(object sender, RoutedEventArgs e)
+        {
+            //check if cart is not empty
+            if (cart.shoppingCart != null && cart.shoppingCart.Count > 0)
+            {
+                //messagebox display to user
+                var result = MessageBox.Show(
+                    "Your cart is not empty. Would you like to clear the cart before logging out?",
+                    "Confirm Logout",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    clearCart_Click(sender, e);
+                    PerformLogout();
+                }
+                //messageboxresult.no just do nothing
+            }
+            //cart is empty and user wants to logout
+            else
+            {
+                PerformLogout();
+            }
+        }
+
+        private void PerformLogout()
+        {
+            userData = null;
+            statusTextBlock.Text = "Please login before proceeding to checkout.";
+
+            loginButton.Visibility = Visibility.Visible;
+            logoutButton.Visibility = Visibility.Collapsed;
+
+            statusTextBlock.Text = "You have been logged out.";
+            statusTextBlock.Foreground = Brushes.Black;
         }
 
         private void exitButton_Click(object sender, RoutedEventArgs e) { this.Close(); }
@@ -144,5 +186,8 @@ namespace BookStoreGUI
             var pay = new PaymentWindow();
             pay.ShowDialog();
         } 
+        private void checkoutButton_Click(object sender, RoutedEventArgs e) { } // checkout method later?
+
+
     }
 }
