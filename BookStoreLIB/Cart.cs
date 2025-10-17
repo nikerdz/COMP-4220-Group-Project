@@ -12,16 +12,37 @@ namespace BookStoreLIB
         public List<Book> shoppingCart = new List<Book>(); // list of books for each customer cart
         public bool addBook(Book book) // based on obj from DB booklist
         {
-            if (book == null) return false;
-            shoppingCart.Add(book); // adds to shopping cart list
-            return true;
+            for (int i = 0; i < shoppingCart.Count; i++)
+            {
+                if (shoppingCart[i].BookID == book.BookID)
+                {
+                    shoppingCart[i].Quantity += 1;
+                    return true;
+                }
+            }
+
+                shoppingCart.Add(book);
+                return true;
         }
         public bool removeBook(Book book) // removing cart books
         {
-            if (shoppingCart.Contains(book))
+           
+            for (int i = 0; i < shoppingCart.Count; i++)
             {
-                shoppingCart.Remove(book);
-                return true;
+                if (shoppingCart[i].BookID == book.BookID)
+                {
+                    if (shoppingCart[i].Quantity > 1)
+                    {
+                        shoppingCart[i].Quantity -= 1;
+                    }
+                    else
+                    {
+                        shoppingCart.RemoveAt(i);
+                        
+                    }
+                    return true;
+                }    
+                
             }
 
             return false;
