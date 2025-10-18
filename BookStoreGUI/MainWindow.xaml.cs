@@ -99,9 +99,13 @@ namespace BookStoreGUI
         private List<Book> cartBooks = new List<Book>();
         public void LoadTestBooks() // sample hard coded books using Book class (TESTING)
         {
-            inventory.Add(new Book { BookID = "101", Title = "Book A", Author = "Dr. Suess", Price = 10, Year = 1999 });
-            inventory.Add(new Book { BookID = "102", Title = "Book B", Author = "John Doe", Price = 24, Year = 2008 });
-            inventory.Add(new Book { BookID = "103", Title = "Book C", Author = "Jane Doe", Price = 38, Year = 2024 });
+            inventory.Add(new Book { BookID = 101, Title = "Book A", Author = "Dr. Suess", Price = 10, Year = 1999 });
+            inventory.Add(new Book { BookID = 102, Title = "Book B", Author = "John Doe", Price = 24, Year = 2008 });
+            inventory.Add(new Book { BookID = 103, Title = "Book C", Author = "Jane Doe", Price = 38, Year = 2024 });
+            inventory.Add(new Book { BookID = 104, Title = "Book D", Author = "Robert Munch", Price = 15, Year = 2017 });
+            inventory.Add(new Book { BookID = 105, Title = "Book E", Author = "Kevin Smith", Price = 44, Year = 2008 });
+            inventory.Add(new Book { BookID = 106, Title = "Book F", Author = "Willow Rich", Price = 38, Year = 2024 });
+            inventory.Add(new Book { BookID = 107, Title = "Book G", Author = "Pricilla Esther", Price = 15, Year = 2017 });
 
         }
         public MainWindow() { // for books from a book list
@@ -110,13 +114,7 @@ namespace BookStoreGUI
             ProductsDataGrid.ItemsSource = inventory;
             orderListView.ItemsSource = cartBooks;
         }
-        private void Window_Loaded(object sender, RoutedEventArgs e) // smart handling for button enabling
-        {
-            //addButton.IsEnabled = false;
-            //removeButton.IsEnabled = false;
-            //clearCart.IsEnabled = false;
-            //checkoutOrderButton.IsEnabled = false;
-        }
+        private void Window_Loaded(object sender, RoutedEventArgs e) { }
 
         private Cart cart = new Cart(); // create a cart object
         private void updateCart() // for cart UI refresh
@@ -171,6 +169,12 @@ namespace BookStoreGUI
 
         private void clearCart_Click(object sender, RoutedEventArgs e)
         {
+            if (cart.shoppingCart.Count == 0)
+            {
+                statusTextBlock.Text = "ERROR: Cart already empty.";
+                statusTextBlock.Foreground = Brushes.Red;
+                return;
+            }    
             cart.clearCart();
             updateCart();
             statusTextBlock.Text = "SUCCESS: Cart cleared!";

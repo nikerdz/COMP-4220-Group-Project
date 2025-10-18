@@ -8,7 +8,7 @@ namespace BookStoreLIB
 {
     public class Book // for a single book
     {
-        public string BookID { get; set; }
+        public int BookID { get; set; }
         public string Title { get; set; }
         public string Author { get; set; }
         public int Quantity { get; set; } = 1;
