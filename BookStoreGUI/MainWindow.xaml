@@ -68,7 +68,7 @@
                         </GridView>
                     </ListView.View>
                 </ListView>
-         </StackPanel>
+            </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
                 <Button x:Name="addButton" MinHeight="25" MinWidth="80"
 		                Content="Add" Click="addButton_Click" Margin="5"/>
@@ -80,8 +80,6 @@
 		                Content="Proceed to Checkout" Click="checkoutButton_Click" Margin="5"/>
             </StackPanel>
         </StackPanel>
-        <StatusBar VerticalAlignment="Bottom" HorizontalAlignment="Stretch">
-            <TextBlock x:Name="statusTextBlock"><Run Text="Please login before proceeding to checkout."/></TextBlock>
-        </StatusBar>
+        <StatusBar VerticalAlignment="Bottom" HorizontalAlignment="Stretch"/>
     </Grid>
 </Window>
