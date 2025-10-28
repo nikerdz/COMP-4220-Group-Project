@@ -22,15 +22,22 @@
                         </ItemsPanelTemplate>
                     </ComboBox.ItemsPanel>
                 </ComboBox>
+
                 <Button Content="Login" Height="25" x:Name="loginButton"
-    Width="75" Margin="28,2,0,0" Click="loginButton_Click" Visibility="Visible" />
+                        Width="75" Margin="28,2,0,0" Click="loginButton_Click" Visibility="Visible" />
                 <Button Content="Logout" Height="25" x:Name="logoutButton"
-    Width="75" Margin="28,2,0,0" Click="logoutButton_Click" Visibility="Collapsed" />
+                        Width="75" Margin="28,2,0,0" Click="logoutButton_Click" Visibility="Collapsed" />
                 <Button Content="Register" Height="25" x:Name="registerButton" 
-            Width="50" Margin="10,2,0,0" Click="registerButton_Click" />
+                        Width="50" Margin="10,2,0,0" Click="registerButton_Click" />
                 <Button Content="Exit" Height="25" x:Name="exitButton"
-		    Width="50" Margin="10,2,0,0" Click="exitButton_Click" />
+                        Width="50" Margin="10,2,0,0" Click="exitButton_Click" />
+
+                <!-- NEW: Admin button (collapsed by default; show it after login if IsAdmin=true) -->
+                <Button Content="Admin" Height="25" x:Name="adminButton"
+                        Width="75" Margin="10,2,0,0" Click="adminButton_Click"
+                        ToolTip="Open Admin Dashboard" Visibility="Collapsed" />
             </StackPanel>
+
             <DataGrid AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" Height="165" 
 		ItemsSource="{Binding drCat_Book}"
 		x:Name="ProductsDataGrid" RowDetailsVisibilityMode="VisibleWhenSelected"
@@ -68,7 +75,8 @@
                         </GridView>
                     </ListView.View>
                 </ListView>
-         </StackPanel>
+            </StackPanel>
+
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
                 <Button x:Name="addButton" MinHeight="25" MinWidth="80"
 		                Content="Add" Click="addButton_Click" Margin="5"/>
@@ -80,8 +88,11 @@
 		                Content="Proceed to Checkout" Click="checkoutButton_Click" Margin="5"/>
             </StackPanel>
         </StackPanel>
+
         <StatusBar VerticalAlignment="Bottom" HorizontalAlignment="Stretch">
-            <TextBlock x:Name="statusTextBlock"><Run Text="Please login before proceeding to checkout."/></TextBlock>
+            <TextBlock x:Name="statusTextBlock">
+                <Run Text="Please login before proceeding to checkout."/>
+            </TextBlock>
         </StatusBar>
     </Grid>
 </Window>
