@@ -1,12 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿CREATE TABLE [dbo].[Wishlist] (
+    [WishlistID] INT IDENTITY(1,1) PRIMARY KEY,
+    [UserID]     INT       NOT NULL,
+    [ISBN]       CHAR(10)  NOT NULL,
+    [DateAdded]  DATETIME  NOT NULL DEFAULT GETDATE(),
 
-namespace BookStoreGUI.Database.Scripts
-{
-    class _20251113_AddWishListTable
-    {
-    }
-}
+    CONSTRAINT UQ_Wishlist UNIQUE (UserID, ISBN),
+
+    CONSTRAINT FK_Wishlist_User
+        FOREIGN KEY (UserID) REFERENCES [dbo].[UserData] (UserID)
+        ON DELETE CASCADE,
+
+    CONSTRAINT FK_Wishlist_Book
+        FOREIGN KEY (ISBN) REFERENCES [dbo].[BookData] (ISBN)
+        ON DELETE CASCADE
+);
