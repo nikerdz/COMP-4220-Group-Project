@@ -1,8 +1,11 @@
 import { NavLink } from "react-router-dom";
 import { TablerShoppingCart } from "../icons/Cart";
 import ThemeToggle from "./ThemeToggle";
+import { CartOverlay } from "./CartOverlay";
+import { useState } from "react";
 
 export default function Header() {
+    const [isCartOpen, setIsCartOpen] = useState(false);
     const base = "px-3 py-1 rounded hover:bg-slate-100";
     const active = ({ isActive }: { isActive: boolean }) =>
         `${base} ${isActive ? "bg-slate-200 font-semibold" : ""}`;
@@ -26,15 +29,18 @@ export default function Header() {
                         </NavLink>
                     </nav>
                     <ThemeToggle />
-                    <NavLink
-                        to="/cart"
-                        className="p-2 rounded hover:bg-slate-100"
+                    <button
+                        onClick={() => setIsCartOpen(true)}
+                        className="p-2 rounded hover:bg-slate-100 transition-colors"
                         aria-label="Shopping cart"
                     >
                         <TablerShoppingCart className="w-5 h-5" />
-                    </NavLink>
+                    </button>
                 </div>
             </div>
+             {/* Cart Overlay */}
+            <CartOverlay isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+
         </header>
     );
 }
