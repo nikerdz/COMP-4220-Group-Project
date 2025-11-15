@@ -202,6 +202,9 @@
   <ItemGroup>
     <Compile Include="Book.cs" />
     <Compile Include="Cart.cs" />
+    <Compile Include="Coupon.cs" />
+    <Compile Include="CouponDAL.cs" />
+    <Compile Include="CouponUnitTests.cs" />
     <Compile Include="PaymentUnitTests.cs" />
     <Compile Include="PaymentRules.cs" />
     <Compile Include="LogoutUnitTest.cs" />
