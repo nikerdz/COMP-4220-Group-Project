@@ -21,6 +21,30 @@ interface BookItem {
     imageUrl: string;
     shortDescription: string;
     description: string;
+    price: number;
+    inStock: number;
+}
+interface CartItem {
+    book: BookItem;
+    quantity: number;
+}
+
+interface BooksSectionProps {
+    cart: CartItem[];
+    setCart: (cart: CartItem[] | ((prev: CartItem[]) => CartItem[])) => void;
+}
+
+interface BackendCartItem {
+    isbn: string;
+    categoryID: number;
+    title: string;
+    author: string;
+    price: number;
+    year: string;
+    inStock: number;
+    publisher?: string;
+    edition?: string;
+    supplierId?: number;
 }
 
 // CategoryID -> label
@@ -52,10 +76,87 @@ const coverMap: Record<string, string> = {
     Default: "/covers/default.avif",
 };
 
-export default function BooksSection() {
+export default function BooksSection({ cart, setCart }: BooksSectionProps) {
     const [books, setBooks] = useState<BookItem[]>([]);
     const [selectedBook, setSelectedBook] = useState<BookItem | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    const fetchCart = async () => {
+        try {
+            const userId = 1; // Using user ID 1 for demo
+
+            const res = await fetch(`http://localhost:5187/api/test/cart/${userId}`);
+
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+            }
+
+            const data = await res.json();
+
+            // Map the backend cart data to our CartItem format
+            const mapped: CartItem[] = data.map((item: any) => {
+                const category = categoryMap[item.categoryID] || "Default";
+                const priceStr = item.price.toFixed(2);
+
+                return {
+                    book: {
+                        id: item.isbn,
+                        title: item.title,
+                        author: item.author,
+                        category,
+                        imageUrl: coverMap[category] || coverMap.Default,
+                        shortDescription: `Published ${item.year}. $${priceStr}. In stock: ${item.inStock}`,
+                        description: `Publisher: ${item.publisher ?? "Unknown"}. Edition: ${item.edition ?? "N/A"}.`,
+                        price: item.price,
+                        inStock: item.inStock,
+                    },
+                    quantity: 1 // Your backend doesn't track quantity per item, so default to 1
+                };
+            });
+
+            setCart(mapped);
+        } catch (err) {
+            console.error("Failed to load cart from server:", err);
+        }
+    };
+
+    const addToCart = async (book: BookItem) => {
+        try {
+            const userId = 1; // Using user ID 1 for demo
+
+            const response = await fetch("http://localhost:5187/api/test/cart/items", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    userId: userId,
+                    isbn: book.id,
+                    categoryID: book.category, // You might need to map this back to number
+                    title: book.title,
+                    author: book.author,
+                    price: book.price,
+                    year: book.shortDescription.split(' ')[1], // Extract year from shortDescription
+                    inStock: book.inStock
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to add to cart");
+            }
+
+            // Refresh the cart from backend after adding
+            await fetchCart();
+
+        } catch (err) {
+            console.error("Failed to add to cart:", err);
+        }
+    };
+
+    // Load cart when component mounts
+    useEffect(() => {
+        fetchCart();
+    }, []);
 
     useEffect(() => {
         const fetchBooks = async () => {
@@ -84,6 +185,8 @@ export default function BooksSection() {
                         shortDescription: `Published ${b.year}. $${priceStr}. In stock: ${b.inStock}`,
                         description: `Publisher: ${b.publisher ?? "Unknown"
                             }. Edition: ${b.edition ?? "N/A"}.`,
+                        price: b.price,
+                        inStock: b.inStock,
                     };
                 });
 
@@ -144,6 +247,21 @@ export default function BooksSection() {
                             <p className="text-sm text-gray-500 line-clamp-3">
                                 {book.shortDescription}
                             </p>
+
+                            <div className="mt-auto pt-4 flex items-center justify-between">
+                                <span className="text-lg font-bold text-gray-900">
+                                    ${book.price.toFixed(2)}
+                                </span>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        addToCart(book);
+                                    }}
+                                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                                >
+                                    Add to Cart
+                                </button>
+                            </div>
                         </div>
                     </article>
                 ))}
@@ -174,6 +292,22 @@ export default function BooksSection() {
                             alt={selectedBook.title}
                             className="w-full rounded-lg"
                         />
+                        <div className="flex items-center justify-between border-t pt-4">
+                            <div>
+                                <span className="text-2xl font-bold text-gray-900">
+                                    ${selectedBook.price.toFixed(2)}
+                                </span>
+                                <p className="text-sm text-gray-600">In stock: {selectedBook.inStock}</p>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    addToCart(selectedBook);
+                                }}
+                                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                            >
+                                Add to Cart
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

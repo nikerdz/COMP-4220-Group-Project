@@ -1,7 +1,29 @@
 ﻿import BooksSection from "../components/BooksSection";
 import Button from "../components/Button";
 
-export default function Home() {
+interface BookItem {
+    id: string;
+    title: string;
+    author: string;
+    category: string;
+    imageUrl: string;
+    shortDescription: string;
+    description: string;
+    price: number;
+    inStock: number;
+}
+
+interface CartItem {
+    book: BookItem;
+    quantity: number;
+}
+
+interface HomeProps {
+    cart: CartItem[];
+    setCart: (cart: CartItem[] | ((prev: CartItem[]) => CartItem[])) => void;
+}
+
+export default function Home({ cart, setCart }: HomeProps) {
     return (
         <main className="flex flex-col">
             {/* Hero Section */}
@@ -24,7 +46,7 @@ export default function Home() {
                 </div>
             </section>
 
-            <BooksSection />
+            <BooksSection cart={cart} setCart={setCart} />
 
             {/* Placeholder for Recommendation Section */}
             <section className="bg-gray-100 py-24 text-center">
