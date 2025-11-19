@@ -54,13 +54,13 @@ const categoryColors: Record<string, string> = {
     Default: "bg-[#3B1F16] text-[#F5EBDD]",
 };
 const coverMap: Record<string, string> = {
-    Classics: "/covers/brown.webp",
-    Programming: "/covers/green.jpg",
-    Software: "/covers/blue.avif",
-    "Self-Help": "/covers/purple.webp",
-    Biography: "/covers/red-book-cover.jpg",
-    Business: "/covers/blue-book-cover.webp",
-    Default: "/covers/default.avif",
+    Classics: "/covers/Classics.png",
+    Programming: "/covers/Programming.png",
+    Software: "/covers/Software.png",
+    "Self-Help": "/covers/Self Help.png",
+    Biography: "/covers/Biography.png",
+    Business: "/covers/Business.png",
+    Default: "/covers/DEFAULT.png",
 };
 
 export default function BooksSection({ cart, setCart }: BooksSectionProps) {
@@ -146,13 +146,14 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
                         className="bg-white/90 rounded-2xl shadow-md overflow-hidden flex flex-col hover:shadow-lg transition-shadow cursor-pointer"
                         onClick={() => setSelectedBook(book)}
                     >
-                        <div className="h-52 overflow-hidden">
+                        <div className="aspect-[3/4] w-full bg-[#f5f5f5] flex items-center justify-center">
                             <img
                                 src={book.imageUrl}
                                 alt={book.title}
-                                className="w-full h-full object-cover"
+                                className="max-h-full max-w-full object-contain"
                             />
                         </div>
+
 
                         <div className="p-4 flex flex-col flex-1">
                             <div
