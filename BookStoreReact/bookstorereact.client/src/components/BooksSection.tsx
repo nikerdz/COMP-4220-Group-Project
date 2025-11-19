@@ -1,56 +1,20 @@
 ﻿import { useEffect, useState } from "react";
-
-interface BackendBook {
-    isbn: string;
-    categoryID: number;
-    title: string;
-    author: string;
-    price: number;
-    supplierId?: number;
-    year: string;
-    edition?: string;
-    publisher?: string;
-    inStock: number;
-}
-
-interface BookItem {
-    id: string;
-    title: string;
-    author: string;
-    category: string;
-    imageUrl: string;
-    shortDescription: string;
-    description: string;
-}
-
-// CategoryID -> label
-const categoryMap: Record<number, string> = {
-    1: "Classics",
-    2: "Programming",
-    3: "Software",
-    4: "Self-Help",
-    5: "Biography",
-    6: "Business",
-};
+import {
+    mapBackendToBookItem,
+    type BookItem,
+    type BackendBook,
+} from "./booksMapper";
 
 const categoryColors: Record<string, string> = {
-    Classics: "bg-[#7A3E2E] text-[#F5EBDD]",
-    Programming: "bg-[#33424E] text-[#F5EBDD]",
-    Software: "bg-[#3B1F16] text-[#F5EBDD]",
-    "Self-Help": "bg-[#C26B3D] text-[#F5EBDD]",
-    Biography: "bg-[#8A4526] text-[#F5EBDD]",
-    Business: "bg-[#241814] text-[#F5EBDD]",
-    Default: "bg-[#3B1F16] text-[#F5EBDD]",
+    Biography: "bg-[#B8BC92] text-white",   // that muted green cover
+    "Self-Help": "bg-[#C94B3B] text-white",   // red Self Help cover
+    Business: "bg-[#2B8B8E] text-white",   // teal Business cover
+    Programming: "bg-[#C66C33] text-white",   // orange Programming cover
+    Software: "bg-[#7C6A52] text-white",   // khaki/brown Software cover
+    Classics: "bg-[#5B3B33] text-white",   // dark brown Classics cover
+    Default: "bg-[#3B1F16] text-[#F5EBDD]" // fallback
 };
-const coverMap: Record<string, string> = {
-    Classics: "/covers/Classics.png",
-    Programming: "/covers/Programming.png",
-    Software: "/covers/Software.png",
-    "Self-Help": "/covers/Self Help.png",
-    Biography: "/covers/Biography.png",
-    Business: "/covers/Business.png",
-    Default: "/covers/DEFAULT.png",
-};
+
 
 export default function BooksSection() {
     const [books, setBooks] = useState<BookItem[]>([]);
@@ -69,23 +33,8 @@ export default function BooksSection() {
                     throw new Error(`HTTP ${res.status}`);
                 }
 
-                const data: BackendBook[] = await res.json();
-
-                const mapped: BookItem[] = data.map((b: BackendBook) => {
-                    const category = categoryMap[b.categoryID] || "Default";
-                    const priceStr = b.price.toFixed(2);
-
-                    return {
-                        id: b.isbn,
-                        title: b.title,
-                        author: b.author,
-                        category,
-                        imageUrl: coverMap[category] || coverMap.Default,
-                        shortDescription: `Published ${b.year}. $${priceStr}. In stock: ${b.inStock}`,
-                        description: `Publisher: ${b.publisher ?? "Unknown"
-                            }. Edition: ${b.edition ?? "N/A"}.`,
-                    };
-                });
+                const data = (await res.json()) as BackendBook[];
+                const mapped = data.map(mapBackendToBookItem);
 
                 setBooks(mapped);
             } catch (err) {
@@ -126,7 +75,6 @@ export default function BooksSection() {
                             />
                         </div>
 
-
                         <div className="p-4 flex flex-col flex-1">
                             <div
                                 className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold mb-2 ${getCategoryClass(
@@ -139,9 +87,7 @@ export default function BooksSection() {
                             <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-2">
                                 {book.title}
                             </h3>
-                            <p className="text-sm text-gray-600 mb-2">
-                                by {book.author}
-                            </p>
+                            <p className="text-sm text-gray-600 mb-2">by {book.author}</p>
                             <p className="text-sm text-gray-500 line-clamp-3">
                                 {book.shortDescription}
                             </p>
