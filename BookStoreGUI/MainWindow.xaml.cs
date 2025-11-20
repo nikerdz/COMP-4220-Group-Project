@@ -238,11 +238,13 @@ namespace BookStoreGUI
             var subtotal = GetSubTotal();
         }
 
-        private void addButton_Click(object sender, RoutedEventArgs e) // add button
+        private void addButton_Click(object sender, RoutedEventArgs e)
         {
             Book bookChoice = (Book)ProductsDataGrid.SelectedItem;
 
-            // handling if no book is selected
+            // ----------------------------------------------------
+            // 1. Validate selection
+            // ----------------------------------------------------
             if (bookChoice == null)
             {
                 statusTextBlock.Text = "Error: Please select a book.";
@@ -250,19 +252,51 @@ namespace BookStoreGUI
                 return;
             }
 
+            // ----------------------------------------------------
+            // 2. Handle PREORDER logic (InStock == 0)
+            // ----------------------------------------------------
+            if (bookChoice.InStock == 0)
+            {
+                var result = MessageBox.Show(
+                    "This book is currently out of stock.\n\nWould you like to pre-order it?",
+                    "Pre-Order Option",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    bookChoice.PreOrder = true;
+                    cart.addBook(bookChoice);
+                    updateCart();
+
+                    statusTextBlock.Text = "SUCCESS: Pre-order added to cart!";
+                    statusTextBlock.Foreground = Brushes.Green;
+                    return; //  Stop normal add logic from running
+                }
+                else
+                {
+                    statusTextBlock.Text = "Pre-order canceled.";
+                    statusTextBlock.Foreground = Brushes.Red;
+                    return; //  Stop normal add logic
+                }
+            }
+
+            // ----------------------------------------------------
+            // 3. Normal ADD logic (InStock > 0)
+            // ----------------------------------------------------
             if (cart.addBook(bookChoice))
             {
-                // pass to add book for boolean return
                 updateCart();
                 statusTextBlock.Text = "SUCCESS: Added to cart!";
                 statusTextBlock.Foreground = Brushes.Green;
             }
             else
             {
-                statusTextBlock.Text = "ERROR: Please try again.";
+                statusTextBlock.Text = "ERROR: Could not add to cart.";
                 statusTextBlock.Foreground = Brushes.Red;
             }
         }
+
 
         private void removeButton_Click(object sender, RoutedEventArgs e)
         {

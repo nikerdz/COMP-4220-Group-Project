@@ -21,12 +21,26 @@ namespace BookStoreLIB
                     return true;
                 }
             }
+
+           
+
+            if (book.InStock <= 0 && book.PreOrder == true)
+            {
                     book.Quantity = 1;
                     cartBooks.Add(book);
                     book.UpdateCost();
                     return true;
+            }
+                book.Quantity = 1;
+                    cartBooks.Add(book);
+                    book.UpdateCost();
+                    return true;
+
                 //book.CartTimestamp = DateTime.Now;
+               
         }
+
+       
         public bool removeBook(Book book) // removing cart books
         {
            
