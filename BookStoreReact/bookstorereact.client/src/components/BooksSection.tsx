@@ -5,6 +5,50 @@ import {
     type BackendBook,
 } from "./booksMapper";
 
+interface BackendBook {
+    isbn: string;
+    categoryID: number;
+    title: string;
+    author: string;
+    price: number;
+    supplierId?: number;
+    year: string;
+    edition?: string;
+    publisher?: string;
+    inStock: number;
+}
+
+interface BookItem {
+    id: string;
+    title: string;
+    author: string;
+    category: string;
+    imageUrl: string;
+    shortDescription: string;
+    description: string;
+    price: number;
+    inStock: number;
+}
+
+// CategoryID -> label
+const categoryMap: Record<number, string> = {
+    1: "Classics",
+    2: "Programming",
+    3: "Software",
+    4: "Self-Help",
+    5: "Biography",
+    6: "Business",
+};
+interface CartItem {
+    book: BookItem;
+    quantity: number;
+}
+interface BooksSectionProps {
+    cart: CartItem[];
+    setCart: (cart: CartItem[] | ((prev: CartItem[]) => CartItem[])) => void;
+}
+
+
 const categoryColors: Record<string, string> = {
     Biography: "bg-[#B8BC92] text-white",   // that muted green cover
     "Self-Help": "bg-[#C94B3B] text-white",   // red Self Help cover
@@ -16,10 +60,26 @@ const categoryColors: Record<string, string> = {
 };
 
 
-export default function BooksSection() {
+
+export default function BooksSection({ cart, setCart }: BooksSectionProps) {
     const [books, setBooks] = useState<BookItem[]>([]);
     const [selectedBook, setSelectedBook] = useState<BookItem | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    const addToCart = (book: BookItem) => {
+        setCart((prevCart: CartItem[]) => {
+            const existingItem = prevCart.find(item => item.book.id === book.id);
+            if (existingItem) {
+                return prevCart.map(item =>
+                    item.book.id === book.id
+                        ? { ...item, quantity: item.quantity + 1 }
+                        : item
+                );
+            } else {
+                return [...prevCart, { book, quantity: 1 }];
+            }
+        });
+    };
 
     useEffect(() => {
         const fetchBooks = async () => {
@@ -35,6 +95,25 @@ export default function BooksSection() {
 
                 const data = (await res.json()) as BackendBook[];
                 const mapped = data.map(mapBackendToBookItem);
+                const data: BackendBook[] = await res.json();
+
+                const mapped: BookItem[] = data.map((b: BackendBook) => {
+                    const category = categoryMap[b.categoryID] || "Default";
+                    const priceStr = b.price.toFixed(2);
+
+                    return {
+                        id: b.isbn,
+                        title: b.title,
+                        author: b.author,
+                        category,
+                        imageUrl: coverMap[category] || coverMap.Default,
+                        shortDescription: `Published ${b.year}. $${priceStr}. In stock: ${b.inStock}`,
+                        description: `Publisher: ${b.publisher ?? "Unknown"
+                            }. Edition: ${b.edition ?? "N/A"}.`,
+                        price: b.price,
+                        inStock: b.inStock,
+                    };
+                });
 
                 setBooks(mapped);
             } catch (err) {
@@ -91,6 +170,20 @@ export default function BooksSection() {
                             <p className="text-sm text-gray-500 line-clamp-3">
                                 {book.shortDescription}
                             </p>
+                            <div className="mt-auto pt-4 flex items-center justify-between">
+                                <span className="text-lg font-bold text-gray-900">
+                                    ${book.price.toFixed(2)}
+                                </span>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        addToCart(book);
+                                    }}
+                                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                                >
+                                    Add to Cart
+                                </button>
+                            </div>
                         </div>
                     </article>
                 ))}
@@ -121,6 +214,22 @@ export default function BooksSection() {
                             alt={selectedBook.title}
                             className="w-full rounded-lg"
                         />
+                        <div className="flex items-center justify-between border-t pt-4">
+                            <div>
+                                <span className="text-2xl font-bold text-gray-900">
+                                    ${selectedBook.price.toFixed(2)}
+                                </span>
+                                <p className="text-sm text-gray-600">In stock: {selectedBook.inStock}</p>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    addToCart(selectedBook);
+                                }}
+                                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                            >
+                                Add to Cart
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

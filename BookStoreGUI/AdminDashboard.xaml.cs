@@ -1,58 +1,71 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using BookStoreGUI;
+﻿using System.Windows;
 
 namespace BookStoreGUI
 {
     public partial class AdminDashboard : Window
     {
-        public AdminDashboard() // Keeping this because this is our default constructor
+        private readonly string _loginName;
+
+        // Single constructor; always initialize XAML first
+        public AdminDashboard(string username)
         {
-            // InitializeComponent();
-        }
-        public AdminDashboard(string username) : this() 
-        {
-            // TxtCurrentUser.Text = $"Admin: {username}";
+            InitializeComponent();                    
+            _loginName = string.IsNullOrWhiteSpace(username) ? "admin" : username;
+            TxtCurrentUser.Text = $"Admin: {_loginName}";
+
+            // Optional: show a default landing view so the content area isn’t empty
+            ContentHost.Content = BuildWelcome();
         }
 
-        // Header: Logout
+        private UIElement BuildWelcome()
+        {
+            return new System.Windows.Controls.TextBlock
+            {
+                Text = "Welcome! Pick a section on the left (Inventory, Categories, Offers, Orders).",
+                Margin = new Thickness(24),
+                FontSize = 16
+            };
+        }
+
         private void BtnLogout_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Logout clicked (TODO: implement sign-out)");
             Close();
         }
 
-        // Left Nav
         private void NavInventory_Click(object sender, RoutedEventArgs e)
         {
-            // TODO: load Inventory view into ContentHost
-            MessageBox.Show("Inventory clicked (TODO)");
+            ContentHost.Content = new System.Windows.Controls.TextBlock
+            {
+                Text = "Inventory — coming soon.",
+                Margin = new Thickness(24)
+            };
         }
 
         private void NavCategories_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Categories clicked (TODO)");
+            ContentHost.Content = new System.Windows.Controls.TextBlock
+            {
+                Text = "Categories — coming soon.",
+                Margin = new Thickness(24)
+            };
         }
 
         private void NavOffers_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Offers clicked (TODO)");
+            ContentHost.Content = new System.Windows.Controls.TextBlock
+            {
+                Text = "Offers — coming soon.",
+                Margin = new Thickness(24)
+            };
         }
 
         private void NavOrders_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Orders clicked (TODO)");
+            ContentHost.Content = new System.Windows.Controls.TextBlock
+            {
+                Text = "Orders — coming soon.",
+                Margin = new Thickness(24)
+            };
         }
     }
 }
