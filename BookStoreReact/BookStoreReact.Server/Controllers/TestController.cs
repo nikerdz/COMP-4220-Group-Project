@@ -82,6 +82,58 @@ namespace BookStoreReact.Server.Controllers
             }
         }
 
+        // REGISTER
+        public class RegisterRequest
+        {
+            public string FullName { get; set; } = "";
+            public string Username { get; set; } = "";
+            public string Password { get; set; } = "";
+            public string Email { get; set; } = "";
+        }
+
+        [HttpPost("register")]
+        public IActionResult Register([FromBody] RegisterRequest req)
+        {
+            try
+            {
+                // Validate required fields
+                if (string.IsNullOrWhiteSpace(req.Username))
+                    return BadRequest(new { message = "Username is required." });
+
+                if (string.IsNullOrWhiteSpace(req.Password))
+                    return BadRequest(new { message = "Password is required." });
+
+                if (string.IsNullOrWhiteSpace(req.Email))
+                    return BadRequest(new { message = "Email is required." });
+
+                // Attempt to register user
+                var dal = new DALUserInfo();
+                bool registered = dal.RegisterUser(req.FullName, req.Username, req.Password, req.Email);
+
+                if (!registered)
+                    return BadRequest(new { message = "Username already exists. Please choose a different username." });
+
+                // Auto-login after successful registration
+                var user = new UserData();
+                bool loggedIn = user.LogIn(req.Username, req.Password);
+
+                if (!loggedIn)
+                    return StatusCode(500, new { message = "Registration succeeded but auto-login failed." });
+
+                return Ok(new
+                {
+                    userId = user.UserID,
+                    username = user.LoginName,
+                    isManager = user.IsManager,
+                    type = user.Type
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Server error.", detail = ex.Message });
+            }
+        }
+
         // BOOKS 
         [HttpGet("books")]
         public ActionResult<IEnumerable<Book>> GetBooks()

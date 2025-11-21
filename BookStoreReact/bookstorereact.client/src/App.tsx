@@ -3,6 +3,7 @@ import MainLayout from "./layouts/MainLayout";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Contact from "./pages/Contact";
 import { useState } from "react";
 
@@ -40,6 +41,7 @@ export default function App() {
 
             {/* Routes WITHOUT header */}
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="*" element={<NotFound />} />
         </Routes>
     );
