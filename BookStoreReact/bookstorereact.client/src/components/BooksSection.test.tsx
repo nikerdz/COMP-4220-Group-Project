@@ -19,12 +19,12 @@ const mockBooks: BackendBook[] = [
 describe("BooksSection UI", () => {
     beforeEach(() => {
         // reset fetch between tests
-        // @ts-expect-error
+        // @ts-expect-error - mock global fetch for tests
         global.fetch = vi.fn();
     });
 
     it("shows books when fetch succeeds", async () => {
-        // @ts-expect-error
+        // @ts-expect-error - mock successful fetch response
         global.fetch.mockResolvedValueOnce({
             ok: true,
             json: async () => mockBooks,
@@ -43,7 +43,7 @@ describe("BooksSection UI", () => {
     });
 
     it("shows error message when fetch fails", async () => {
-        // @ts-expect-error
+        // @ts-expect-error - mock failed fetch response
         global.fetch.mockResolvedValueOnce({
             ok: false,
             status: 500,
@@ -58,7 +58,7 @@ describe("BooksSection UI", () => {
     });
 
     it("opens and closes modal when clicking a book", async () => {
-        // @ts-expect-error
+        // @ts-expect-error - mocking global fetch for this test
         global.fetch.mockResolvedValueOnce({
             ok: true,
             json: async () => mockBooks,
