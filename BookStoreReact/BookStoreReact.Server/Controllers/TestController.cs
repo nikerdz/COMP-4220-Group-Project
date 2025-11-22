@@ -365,5 +365,72 @@ namespace BookStoreReact.Server.Controllers
                 return StatusCode(500, new { message = "Payment validated but failed to create order.", detail = ex.Message });
             }
         }
+
+        public class WishlistItemDto
+        {
+            public int WishlistID { get; set; }
+            public int UserID { get; set; }
+            public string ISBN { get; set; } = "";
+            public string Title { get; set; } = "";
+            public string Author { get; set; } = "";
+            public decimal Price { get; set; }
+            public DateTime DateAdded { get; set; }
+        }
+
+        [HttpGet("wishlist/{userId:int}")]
+        public ActionResult<IEnumerable<WishlistItemDto>> GetWishlist(int userId)
+        {
+            if (userId <= 0)
+                return BadRequest(new { message = "Invalid user ID." });
+
+            var result = new List<WishlistItemDto>();
+
+            using (var conn = new SqlConnection(BuildConnString()))
+            {
+                conn.Open();
+
+                const string sql = @"
+            SELECT 
+                w.WishlistID,
+                w.UserID,
+                w.ISBN,
+                w.DateAdded,
+                b.Title,
+                b.Author,
+                b.Price
+            FROM Wishlist w
+            INNER JOIN BookData b ON w.ISBN = b.ISBN
+            WHERE w.UserID = @UserId
+            ORDER BY w.DateAdded DESC;";
+
+                using (var cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            result.Add(new WishlistItemDto
+                            {
+                                WishlistID = reader.GetInt32(0),
+                                UserID = reader.GetInt32(1),
+                                ISBN = reader.GetString(2),
+                                DateAdded = reader.GetDateTime(3),
+                                Title = reader.GetString(4),
+                                Author = reader.GetString(5),
+                                Price = reader.GetDecimal(6)
+                            });
+                        }
+                    }
+                }
+            }
+
+            return Ok(result);
+        }
+
+
+
+
     }
 }
