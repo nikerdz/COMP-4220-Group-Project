@@ -1,4 +1,9 @@
 ﻿import { useEffect, useState } from "react";
+import {
+    mapBackendToBookItem,
+    type BookItem,
+    type BackendBook,
+} from "./booksMapper";
 
 interface BackendBook {
     isbn: string;
@@ -45,23 +50,16 @@ interface BooksSectionProps {
 
 
 const categoryColors: Record<string, string> = {
-    Classics: "bg-[#7A3E2E] text-[#F5EBDD]",
-    Programming: "bg-[#33424E] text-[#F5EBDD]",
-    Software: "bg-[#3B1F16] text-[#F5EBDD]",
-    "Self-Help": "bg-[#C26B3D] text-[#F5EBDD]",
-    Biography: "bg-[#8A4526] text-[#F5EBDD]",
-    Business: "bg-[#241814] text-[#F5EBDD]",
-    Default: "bg-[#3B1F16] text-[#F5EBDD]",
+    Biography: "bg-[#B8BC92] text-white",   // that muted green cover
+    "Self-Help": "bg-[#C94B3B] text-white",   // red Self Help cover
+    Business: "bg-[#2B8B8E] text-white",   // teal Business cover
+    Programming: "bg-[#C66C33] text-white",   // orange Programming cover
+    Software: "bg-[#7C6A52] text-white",   // khaki/brown Software cover
+    Classics: "bg-[#5B3B33] text-white",   // dark brown Classics cover
+    Default: "bg-[#3B1F16] text-[#F5EBDD]" // fallback
 };
-const coverMap: Record<string, string> = {
-    Classics: "/covers/Classics.png",
-    Programming: "/covers/Programming.png",
-    Software: "/covers/Software.png",
-    "Self-Help": "/covers/Self Help.png",
-    Biography: "/covers/Biography.png",
-    Business: "/covers/Business.png",
-    Default: "/covers/DEFAULT.png",
-};
+
+
 
 export default function BooksSection({ cart, setCart }: BooksSectionProps) {
     const [books, setBooks] = useState<BookItem[]>([]);
@@ -95,6 +93,8 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
                     throw new Error(`HTTP ${res.status}`);
                 }
 
+                const data = (await res.json()) as BackendBook[];
+                const mapped = data.map(mapBackendToBookItem);
                 const data: BackendBook[] = await res.json();
 
                 const mapped: BookItem[] = data.map((b: BackendBook) => {
@@ -154,7 +154,6 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
                             />
                         </div>
 
-
                         <div className="p-4 flex flex-col flex-1">
                             <div
                                 className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold mb-2 ${getCategoryClass(
@@ -167,9 +166,7 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
                             <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-2">
                                 {book.title}
                             </h3>
-                            <p className="text-sm text-gray-600 mb-2">
-                                by {book.author}
-                            </p>
+                            <p className="text-sm text-gray-600 mb-2">by {book.author}</p>
                             <p className="text-sm text-gray-500 line-clamp-3">
                                 {book.shortDescription}
                             </p>
