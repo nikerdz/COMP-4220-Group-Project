@@ -42,7 +42,10 @@ export default function Home({ cart, setCart }: HomeProps) {
                     <p className="text-lg mb-6 text-gray-200">
                         Discover your next great read
                     </p>
-                    <Button to="/login" color="blue">Go to Login</Button>
+                    <div className="flex flex-col gap-3 items-center">
+                        <Button to="/login" color="blue">Go to Login</Button>
+                        <Button to="/register" color="green">Register</Button>
+                    </div>
                 </div>
             </section>
 

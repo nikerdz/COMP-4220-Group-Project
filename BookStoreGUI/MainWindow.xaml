@@ -90,8 +90,6 @@
 		                Content="Proceed to Checkout" Click="checkoutButton_Click" Margin="5"/>
             </StackPanel>
         </StackPanel>
-        <StatusBar VerticalAlignment="Bottom" HorizontalAlignment="Stretch">
-            <TextBlock x:Name="statusTextBlock"><Run Text="Please login before proceeding to checkout."/></TextBlock>
-        </StatusBar>
+        <StatusBar VerticalAlignment="Bottom" HorizontalAlignment="Stretch"/>
     </Grid>
 </Window>

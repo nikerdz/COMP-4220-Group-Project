@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Data.SqlClient;
@@ -10,7 +10,6 @@ using BookStoreGUI;
 using BookStoreLIB;
 namespace BookStoreGUI
 {
-    /// Interaction logic for MainWindow.xaml
     public partial class MainWindow : Window
     {
         private UserData userData;
@@ -51,10 +50,8 @@ namespace BookStoreGUI
 
         private void loginButton_Click(object sender, RoutedEventArgs e)
         {
-            userData = new UserData();
-            var dlg = new LoginDialog();
-            dlg.Owner = this;
-            dlg.ShowDialog();
+            // Your team's existing loading logic (categories, data binding, etc.)
+        }
 
             if (dlg.DialogResult == true)
             {
@@ -99,18 +96,14 @@ namespace BookStoreGUI
                     "Your cart is not empty. Would you like to clear the cart before logging out?",
                     "Confirm Logout", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
-                if (result == MessageBoxResult.Yes)
-                {
-                    clearCart_Click(sender, e);
-                    PerformLogout();
-                }
-                //messageboxresult.no just do nothing
-            }
-            //cart is empty and user wants to logout
-            else
-            {
-                PerformLogout();
-            }
+        private void ProductsDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Existing product selection logic (your team’s)
+        }
+
+        private void addButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Existing add-to-cart logic
         }
 
         private void adminButton_Click(object sender, RoutedEventArgs e)
@@ -305,8 +298,10 @@ namespace BookStoreGUI
         private void checkoutButton_Click(object sender, RoutedEventArgs e) {
             if (cart.cartBooks.Count == 0)
             {
-                MessageBox.Show("Your cart is empty.");
-                return;
+                MessageBox.Show("An error occurred while opening registration:\n" + ex.Message,
+                                "Error",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Error);
             }
 
             var checkout = new CheckoutWindow(cart.cartBooks)

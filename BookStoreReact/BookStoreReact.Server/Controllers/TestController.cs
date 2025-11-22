@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using Microsoft.AspNetCore.Mvc;
 using BookStoreLIB;
+using BookStoreReact.Server.Models;
+using BookStoreReact.Server.Data;
 
 namespace BookStoreReact.Server.Controllers
 {
@@ -75,6 +77,58 @@ namespace BookStoreReact.Server.Controllers
             catch (ArgumentException ex)
             {
                 return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Server error.", detail = ex.Message });
+            }
+        }
+
+        // REGISTER
+        public class RegisterRequest
+        {
+            public string FullName { get; set; } = "";
+            public string Username { get; set; } = "";
+            public string Password { get; set; } = "";
+            public string Email { get; set; } = "";
+        }
+
+        [HttpPost("register")]
+        public IActionResult Register([FromBody] RegisterRequest req)
+        {
+            try
+            {
+                // Validate required fields
+                if (string.IsNullOrWhiteSpace(req.Username))
+                    return BadRequest(new { message = "Username is required." });
+
+                if (string.IsNullOrWhiteSpace(req.Password))
+                    return BadRequest(new { message = "Password is required." });
+
+                if (string.IsNullOrWhiteSpace(req.Email))
+                    return BadRequest(new { message = "Email is required." });
+
+                // Attempt to register user
+                var dal = new DALUserInfo();
+                bool registered = dal.RegisterUser(req.FullName, req.Username, req.Password, req.Email);
+
+                if (!registered)
+                    return BadRequest(new { message = "Username already exists. Please choose a different username." });
+
+                // Auto-login after successful registration
+                var user = new UserData();
+                bool loggedIn = user.LogIn(req.Username, req.Password);
+
+                if (!loggedIn)
+                    return StatusCode(500, new { message = "Registration succeeded but auto-login failed." });
+
+                return Ok(new
+                {
+                    userId = user.UserID,
+                    username = user.LoginName,
+                    isManager = user.IsManager,
+                    type = user.Type
+                });
             }
             catch (Exception ex)
             {
@@ -217,6 +271,10 @@ namespace BookStoreReact.Server.Controllers
             var cart = GetCart(req.UserId);
             var items = cart.cartBooks;
 
+            // Check if cart is empty
+            if (items == null || items.Count == 0)
+                return BadRequest(new { message = "Cart is empty." });
+
             var required = new Dictionary<string, string>
             {
                 { "Email",      req.Email },
@@ -246,14 +304,66 @@ namespace BookStoreReact.Server.Controllers
             var (subtotal, taxes, total) =
                 PaymentRules.ComputeTotals(items, req.TaxRate, req.DeliveryFee);
 
-            return Ok(new
+            // Payment validation passed - now save the order to database
+            try
             {
-                subtotal,
-                taxes,
-                delivery = req.DeliveryFee,
-                total,
-                itemCount = items.Count
-            });
+                // Get last 4 digits of card for storage
+                string last4 = req.CardNumber.Length >= 4 
+                    ? "**** " + req.CardNumber.Substring(req.CardNumber.Length - 4) 
+                    : "****";
+
+                // Create order object
+                var order = new Order
+                {
+                    UserID = req.UserId,
+                    OrderDate = DateTime.UtcNow,
+                    SubtotalAmount = subtotal,
+                    TaxAmount = taxes,
+                    DeliveryFee = req.DeliveryFee,
+                    TotalAmount = total,
+                    Status = "Pending",
+                    ShippingAddress = req.Address,
+                    PaymentMethod = last4,
+                    Email = req.Email
+                };
+
+                // Convert cart books to order items
+                var orderItems = new List<OrderItem>();
+                foreach (var book in items)
+                {
+                    orderItems.Add(new OrderItem
+                    {
+                        ISBN = book.ISBN,
+                        Title = book.Title,
+                        Author = book.Author,
+                        Price = book.Price,
+                        Quantity = book.Quantity,
+                        Subtotal = book.Price * book.Quantity
+                    });
+                }
+
+                // Save order to database
+                var dalOrder = new DALOrder();
+                int orderId = dalOrder.CreateOrder(order, orderItems);
+
+                // Clear cart after successful order
+                cart.clearCart();
+
+                return Ok(new
+                {
+                    orderId = orderId,
+                    subtotal,
+                    taxes,
+                    delivery = req.DeliveryFee,
+                    total,
+                    itemCount = items.Count,
+                    message = "Order placed successfully!"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Payment validated but failed to create order.", detail = ex.Message });
+            }
         }
     }
 }
