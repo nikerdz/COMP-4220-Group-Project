@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using Microsoft.AspNetCore.Mvc;
 using BookStoreLIB;
+using BookStoreReact.Server.Models;
+using BookStoreReact.Server.Data;
 
 namespace BookStoreReact.Server.Controllers
 {
@@ -269,6 +271,10 @@ namespace BookStoreReact.Server.Controllers
             var cart = GetCart(req.UserId);
             var items = cart.cartBooks;
 
+            // Check if cart is empty
+            if (items == null || items.Count == 0)
+                return BadRequest(new { message = "Cart is empty." });
+
             var required = new Dictionary<string, string>
             {
                 { "Email",      req.Email },
@@ -298,14 +304,66 @@ namespace BookStoreReact.Server.Controllers
             var (subtotal, taxes, total) =
                 PaymentRules.ComputeTotals(items, req.TaxRate, req.DeliveryFee);
 
-            return Ok(new
+            // Payment validation passed - now save the order to database
+            try
             {
-                subtotal,
-                taxes,
-                delivery = req.DeliveryFee,
-                total,
-                itemCount = items.Count
-            });
+                // Get last 4 digits of card for storage
+                string last4 = req.CardNumber.Length >= 4 
+                    ? "**** " + req.CardNumber.Substring(req.CardNumber.Length - 4) 
+                    : "****";
+
+                // Create order object
+                var order = new Order
+                {
+                    UserID = req.UserId,
+                    OrderDate = DateTime.UtcNow,
+                    SubtotalAmount = subtotal,
+                    TaxAmount = taxes,
+                    DeliveryFee = req.DeliveryFee,
+                    TotalAmount = total,
+                    Status = "Pending",
+                    ShippingAddress = req.Address,
+                    PaymentMethod = last4,
+                    Email = req.Email
+                };
+
+                // Convert cart books to order items
+                var orderItems = new List<OrderItem>();
+                foreach (var book in items)
+                {
+                    orderItems.Add(new OrderItem
+                    {
+                        ISBN = book.ISBN,
+                        Title = book.Title,
+                        Author = book.Author,
+                        Price = book.Price,
+                        Quantity = book.Quantity,
+                        Subtotal = book.Price * book.Quantity
+                    });
+                }
+
+                // Save order to database
+                var dalOrder = new DALOrder();
+                int orderId = dalOrder.CreateOrder(order, orderItems);
+
+                // Clear cart after successful order
+                cart.clearCart();
+
+                return Ok(new
+                {
+                    orderId = orderId,
+                    subtotal,
+                    taxes,
+                    delivery = req.DeliveryFee,
+                    total,
+                    itemCount = items.Count,
+                    message = "Order placed successfully!"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Payment validated but failed to create order.", detail = ex.Message });
+            }
         }
     }
 }
