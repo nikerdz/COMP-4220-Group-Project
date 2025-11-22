@@ -63,3 +63,18 @@ export function mapBackendToBookItem(b: BackendBook): BookItem {
         inStock: b.inStock,
     };
 }
+export function filterBooks(books: BookItem[], query: string): BookItem[] {
+    const q = query.trim().toLowerCase();
+    if (q === "") return books;
+
+    return books.filter((b) => {
+        const title = b.title.toLowerCase();
+        const author = b.author.toLowerCase();
+        const category = b.category.toLowerCase();
+        return (
+            title.includes(q) ||
+            author.includes(q) ||
+            category.includes(q)
+        );
+    });
+}
