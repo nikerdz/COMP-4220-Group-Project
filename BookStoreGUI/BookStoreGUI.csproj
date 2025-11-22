@@ -320,6 +320,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Database\Scripts\20251114_AddCouponTable.sql" />
     <Content Include="Database\Scripts\20251113_AddWishlistTable.sql" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
