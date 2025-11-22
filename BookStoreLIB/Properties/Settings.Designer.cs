@@ -33,5 +33,7 @@ namespace BookStoreLIB.Properties {
                 return ((string)(this["dbConnectionString"]));
             }
         }
+
+        public string BookStoreDBConnectionString { get; internal set; }
     }
 }
