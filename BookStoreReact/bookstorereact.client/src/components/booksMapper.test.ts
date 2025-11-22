@@ -1,7 +1,9 @@
 import {
     getCategoryFromId,
     mapBackendToBookItem,
-    BackendBook,
+    filterBooks,
+    type BackendBook,
+    type BookItem,
 } from "./booksMapper";
 
 describe("getCategoryFromId", () => {
@@ -65,5 +67,67 @@ describe("mapBackendToBookItem", () => {
 
         expect(item.category).toBe("Default");
         expect(item.imageUrl).toContain("DEFAULT.png");
+    });
+});
+
+// TDD: filterBooks search behaviour
+
+const sampleBooks: BookItem[] = [
+    {
+        id: "1",
+        title: "Clean Code",
+        author: "Robert C. Martin",
+        category: "Programming",
+        imageUrl: "",
+        shortDescription: "",
+        description: "",
+    },
+    {
+        id: "2",
+        title: "Becoming",
+        author: "Michelle Obama",
+        category: "Biography",
+        imageUrl: "",
+        shortDescription: "",
+        description: "",
+    },
+    {
+        id: "3",
+        title: "Pride and Prejudice",
+        author: "Jane Austen",
+        category: "Classics",
+        imageUrl: "",
+        shortDescription: "",
+        description: "",
+    },
+];
+
+describe("filterBooks", () => {
+    it("returns all books when query is empty", () => {
+        const result = filterBooks(sampleBooks, "");
+        expect(result).toEqual(sampleBooks);
+    });
+
+    it("matches by title (case-insensitive)", () => {
+        const result = filterBooks(sampleBooks, "clean");
+        expect(result).toHaveLength(1);
+        expect(result[0].title).toBe("Clean Code");
+    });
+
+    it("matches by author (case-insensitive)", () => {
+        const result = filterBooks(sampleBooks, "obama");
+        expect(result).toHaveLength(1);
+        expect(result[0].author).toBe("Michelle Obama");
+    });
+
+    it("matches by category name", () => {
+        const result = filterBooks(sampleBooks, "classics");
+        expect(result).toHaveLength(1);
+        expect(result[0].title).toBe("Pride and Prejudice");
+    });
+
+    it("returns empty array when no books match", () => {
+        const result = filterBooks(sampleBooks, "qwerty");
+        expect(result).toHaveLength(0);
     });
 });
