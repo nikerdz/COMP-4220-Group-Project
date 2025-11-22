@@ -19,12 +19,26 @@ namespace BookStoreLIB
 
         public bool ValidateCoupon(Coupon coupon)
         {
-            throw new NotImplementedException();
+            if (coupon == null) return false;
+            if (!coupon.IsActive) return false;
+            
+            // Use DateTime.Now to match test expectations, though UtcNow is usually better for servers.
+            var now = DateTime.Now; 
+
+            if (coupon.StartDate.HasValue && now < coupon.StartDate.Value) return false;
+            if (coupon.EndDate.HasValue && now > coupon.EndDate.Value) return false;
+            
+            if (coupon.UsageLimit.HasValue && coupon.TimesUsed.HasValue && coupon.TimesUsed.Value >= coupon.UsageLimit.Value) return false;
+
+            return true;
         }
 
         public decimal ApplyDiscount(decimal subtotal, Coupon coupon)
         {
-            throw new NotImplementedException();
+            if (!ValidateCoupon(coupon)) return subtotal;
+            
+            // Returns the NEW subtotal (discounted price)
+            return subtotal - (subtotal * coupon.DiscountRate);
         }
     }
 }

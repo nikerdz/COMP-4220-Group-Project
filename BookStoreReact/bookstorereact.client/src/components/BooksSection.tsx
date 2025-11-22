@@ -95,25 +95,6 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
 
                 const data = (await res.json()) as BackendBook[];
                 const mapped = data.map(mapBackendToBookItem);
-                const data: BackendBook[] = await res.json();
-
-                const mapped: BookItem[] = data.map((b: BackendBook) => {
-                    const category = categoryMap[b.categoryID] || "Default";
-                    const priceStr = b.price.toFixed(2);
-
-                    return {
-                        id: b.isbn,
-                        title: b.title,
-                        author: b.author,
-                        category,
-                        imageUrl: coverMap[category] || coverMap.Default,
-                        shortDescription: `Published ${b.year}. $${priceStr}. In stock: ${b.inStock}`,
-                        description: `Publisher: ${b.publisher ?? "Unknown"
-                            }. Edition: ${b.edition ?? "N/A"}.`,
-                        price: b.price,
-                        inStock: b.inStock,
-                    };
-                });
 
                 setBooks(mapped);
             } catch (err) {

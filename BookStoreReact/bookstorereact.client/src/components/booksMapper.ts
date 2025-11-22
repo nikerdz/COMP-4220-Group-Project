@@ -19,6 +19,8 @@ export interface BookItem {
     imageUrl: string;
     shortDescription: string;
     description: string;
+    price: number;
+    inStock: number;
 }
 
 const categoryMap: Record<number, string> = {
@@ -57,5 +59,7 @@ export function mapBackendToBookItem(b: BackendBook): BookItem {
         shortDescription: `Published ${b.year}. $${priceStr}. In stock: ${b.inStock}`,
         description: `Publisher: ${b.publisher ?? "Unknown"}. Edition: ${b.edition ?? "N/A"
             }.`,
+        price: b.price,
+        inStock: b.inStock,
     };
 }
