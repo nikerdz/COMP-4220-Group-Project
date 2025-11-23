@@ -1,10 +1,20 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import {
     mapBackendToBookItem,
     filterBooks,
     type BookItem,
     type BackendBook,
 } from "./booksMapper";
+
+type CartItem = {
+    book: BookItem;
+    quantity: number;
+};
+
+type BooksSectionProps = {
+    cart: CartItem[];
+    setCart: Dispatch<SetStateAction<CartItem[]>>;
+};
 
 const categoryColors: Record<string, string> = {
     Biography: "bg-[#B8BC92] text-white",
@@ -15,8 +25,6 @@ const categoryColors: Record<string, string> = {
     Classics: "bg-[#5B3B33] text-white",
     Default: "bg-[#3B1F16] text-[#F5EBDD]",
 };
-
-
 
 export default function BooksSection({ cart, setCart }: BooksSectionProps) {
     const [books, setBooks] = useState<BookItem[]>([]);
@@ -44,8 +52,7 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
             try {
                 setError(null);
 
-                // direct backend URL (no proxy)
-                const res = await fetch("http://localhost:5187/api/test/books");
+                const res = await fetch("/api/test/books");
 
                 if (!res.ok) {
                     throw new Error(`HTTP ${res.status}`);
@@ -72,9 +79,9 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
     const filteredBooks = filterBooks(books, search);
 
     return (
-        <section className="bg-white py-16 px-6">
+        <section className="bg-white py-8 px-6">
             <h2 className="text-3xl font-semibold text-gray-800 text-center mb-4">
-                Books
+                Books{cart ? ` (${cart.length})` : ""}
             </h2>
 
             {error && (
@@ -132,6 +139,20 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
                                     <p className="text-sm text-gray-500 line-clamp-3">
                                         {book.shortDescription}
                                     </p>
+
+                                    {/* Add to cart functionality */}
+                                    <div className="mt-auto flex items-center justify-between pt-3">
+                                        <div className="text-sm font-bold">${book.price.toFixed(2)}</div>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                addToCart(book);
+                                            }}
+                                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm"
+                                        >
+                                            Add
+                                        </button>
+                                    </div>
                                 </div>
                             </article>
                         ))}
@@ -169,7 +190,6 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
                                 <span className="text-2xl font-bold text-gray-900">
                                     ${selectedBook.price.toFixed(2)}
                                 </span>
-                                <p className="text-sm text-gray-600">In stock: {selectedBook.inStock}</p>
                             </div>
                             <button
                                 onClick={() => {
