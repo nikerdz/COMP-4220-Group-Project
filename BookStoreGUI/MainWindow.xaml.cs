@@ -1,19 +1,90 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Data.SqlClient;
-using System.Diagnostics.Eventing.Reader;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using BookStoreGUI;
 using BookStoreLIB;
+
 namespace BookStoreGUI
 {
     public partial class MainWindow : Window
     {
         private UserData userData;
+        private List<Book> inventory = new List<Book>();
+        private Cart cart = new Cart();
 
+        // ─────────────────────────────────────────────
+        // MAIN CONSTRUCTOR
+        // ─────────────────────────────────────────────
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+
+        // ─────────────────────────────────────────────
+        // WINDOW LOADED EVENT — REQUIRED BY XAML
+        // ─────────────────────────────────────────────
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            LoadBooks();
+            LoadCart();
+
+            ProductsDataGrid.ItemsSource = inventory;
+            orderListView.ItemsSource = cart.cartBooks;
+
+            addButton.IsEnabled = false;
+            removeButton.IsEnabled = false;
+            clearCart.IsEnabled = false;
+        }
+
+        // ─────────────────────────────────────────────
+        // LOGIN BUTTON
+        // ─────────────────────────────────────────────
+        private void loginButton_Click(object sender, RoutedEventArgs e)
+        {
+            userData = new UserData();
+            var dlg = new LoginDialog { Owner = this };
+
+            if (dlg.ShowDialog() == true)
+            {
+                try
+                {
+                    if (userData.LogIn(dlg.nameTextBox.Text, dlg.passwordTextBox.Password))
+                    {
+                        statusTextBlock.Text = "You are logged in as: " + userData.LoginName;
+
+                        loginButton.Visibility = Visibility.Collapsed;
+                        logoutButton.Visibility = Visibility.Visible;
+
+                        addButton.IsEnabled = true;
+                        removeButton.IsEnabled = true;
+                        clearCart.IsEnabled = true;
+
+                        // Open admin dashboard if needed
+                        if (userData.IsManager || string.Equals(userData.Type, "Admin", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var dashboard = new AdminDashboard(userData.LoginName) { Owner = this };
+                            this.Hide();
+                            dashboard.Closed += (_, __) => this.Show();
+                            dashboard.Show();
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("You could not be verified. Please try again.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Login failed: " + ex.Message);
+                }
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        // REGISTER BUTTON
+        // ─────────────────────────────────────────────
         private void registerButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -23,11 +94,11 @@ namespace BookStoreGUI
 
                 if (ok == true && !string.IsNullOrEmpty(dlg.CreatedUserName))
                 {
-                    // Auto-login using the same path as loginButton_Click
                     userData = new UserData();
                     if (userData.LogIn(dlg.CreatedUserName, dlg.CreatedPassword))
                     {
                         statusTextBlock.Text = "You are logged in as: " + userData.LoginName;
+
                         loginButton.Visibility = Visibility.Collapsed;
                         logoutButton.Visibility = Visibility.Visible;
                         addButton.IsEnabled = true;
@@ -37,7 +108,6 @@ namespace BookStoreGUI
                         MessageBox.Show("Registered, but auto-login failed. Please log in manually.");
                     }
                 }
-                // else: user cancelled dialog; do nothing
             }
             catch (Exception ex)
             {
@@ -45,226 +115,91 @@ namespace BookStoreGUI
             }
         }
 
-
-
-
-        private void loginButton_Click(object sender, RoutedEventArgs e)
-        {
-            // Your team's existing loading logic (categories, data binding, etc.)
-        }
-
-            if (dlg.DialogResult == true)
-            {
-                try
-                {
-                    if (userData.LogIn(dlg.nameTextBox.Text, dlg.passwordTextBox.Password))
-                    {
-                        statusTextBlock.Text = "You are logged in as: " + userData.LoginName;
-                        loginButton.Visibility = Visibility.Collapsed;
-                        logoutButton.Visibility = Visibility.Visible;
-                        addButton.IsEnabled = true;
-                        removeButton.IsEnabled = true;
-                        clearCart.IsEnabled = true;
-                    
-                        if (userData.IsManager || string.Equals(userData.Type, "Admin", StringComparison.OrdinalIgnoreCase))
-                        {
-                            var dashboard = new AdminDashboard(userData.LoginName) { Owner = this };
-                            this.Hide();                          // hide main window while dashboard is open
-                            dashboard.Closed += (_, __) => this.Show(); // show it again when dashboard closes
-                            dashboard.Show();                     // open dashboard
-                        }
-                    }
-                    else
-                    {
-                        MessageBox.Show("You could not be verified. Please try again.");
-                    }
-                }
-                catch (ArgumentException ex)
-                {
-                    MessageBox.Show(ex.Message); // show validation errors
-                }
-            }
-        }
-
+        // ─────────────────────────────────────────────
+        // LOGOUT BUTTON
+        // ─────────────────────────────────────────────
         private void logoutButton_Click(object sender, RoutedEventArgs e)
         {
-            //check if cart is not empty
             if (cart.cartBooks != null && cart.cartBooks.Count > 0)
             {
-                //messagebox display to user
                 var result = MessageBox.Show(
-                    "Your cart is not empty. Would you like to clear the cart before logging out?",
-                    "Confirm Logout", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                    "Your cart is not empty. Clear the cart before logging out?",
+                    "Confirm Logout",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
 
-        private void ProductsDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            // Existing product selection logic (your team’s)
-        }
+                if (result == MessageBoxResult.Yes)
+                    clearCart_Click(sender, e);
+            }
 
-        private void addButton_Click(object sender, RoutedEventArgs e)
-        {
-            // Existing add-to-cart logic
-        }
-
-        private void adminButton_Click(object sender, RoutedEventArgs e)
-        {
-            //new AdminDashboard().Show();
+            PerformLogout();
         }
 
         private void PerformLogout()
         {
             userData = null;
-            statusTextBlock.Text = "Please login before proceeding to checkout.";
+            statusTextBlock.Text = "You have been logged out.";
+
             loginButton.Visibility = Visibility.Visible;
             logoutButton.Visibility = Visibility.Collapsed;
-            
+
             addButton.IsEnabled = false;
-            statusTextBlock.Text = "You have been logged out.";
+            removeButton.IsEnabled = false;
+            clearCart.IsEnabled = false;
+
             statusTextBlock.Foreground = Brushes.Black;
         }
 
+        // ─────────────────────────────────────────────
+        // EXIT BUTTON
+        // ─────────────────────────────────────────────
         private void exitButton_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
         }
 
+        // ─────────────────────────────────────────────
+        // REQUIRED SELECTION CHANGED HANDLER
+        // (matches XAML)
+        // ─────────────────────────────────────────────
         private void ProductsDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // Enable Add button only when a book is selected
+            addButton.IsEnabled = ProductsDataGrid.SelectedItem != null;
         }
 
-        // to pull from list
-        private List<Book> inventory = new List<Book>();
-       
-        private Cart cart = new Cart();
-        public void LoadBooks()
-        {  // name="BookStoreRemote"  ?
-            var CString1 = "Data Source=tfs.cs.uwindsor.ca;Initial Catalog=Agile1422DB25;Persist Security Info=True;User ID=Agile1422U25;Password=Agile1422U25$;Encrypt=True;TrustServerCertificate=True";
-                using (var conn1 = new SqlConnection(CString1))
-            {
-                conn1.Open();
-                var SqlQue1 = "SELECT ISBN, CategoryID, Title, Author, Price, Year, InStock FROM BookData";
-
-                using (var QueCmd1 = new SqlCommand(SqlQue1, conn1))
-                using (var Reader1 = QueCmd1.ExecuteReader())
-                {
-                    while (Reader1.Read())
-
-                        //Console.WriteLine("Title: " + Reader.GetFieldType(2));
-                    {
-                        var book = new Book
-                        {
-                            ISBN = Reader1.GetString(0),
-                            CategoryID = Reader1.GetInt32(1),
-                            Title = Reader1.GetString(2),
-                            Author = Reader1.GetString(3),
-                            Price = Reader1.GetDecimal(4),
-                            Year = Reader1.GetString(5),
-                            InStock = Reader1.GetInt32(6)
-                        };
-
-                        inventory.Add(book);
-                    }
-                }
-
-            }
-        }
-
-        public void LoadCart()
-        {  // name="BookStoreRemote"  ? 
-            var CString2 = "Data Source=tfs.cs.uwindsor.ca;Initial Catalog=Agile1422DB25;Persist Security Info=True;User ID=Agile1422U25;Password=Agile1422U25$;Encrypt=True;TrustServerCertificate=True"; ;
-            using (var conn2 = new SqlConnection(CString2))
-            {
-                conn2.Open();
-                var SqlQue2 = "SELECT ISBN, Quantity, Subtotal FROM Cart";
-
-                using (var QueCmd2 = new SqlCommand(SqlQue2, conn2))
-                using (var Reader2 = QueCmd2.ExecuteReader())
-                {
-                    while (Reader2.Read())
-
-                    {
-                        var book = new Book
-                        {
-                            ISBN = Reader2.GetString(0),
-                            Quantity = Reader2.GetInt32(1),
-                            Subtotal = Reader2.GetDecimal(2),
-                        };
-
-                        cart.addBook(book);
-                    }
-                }
-
-            }
-        }
-
-        public MainWindow() { // for books from a book list
-           InitializeComponent();
-           LoadBooks();
-           LoadCart();
-           ProductsDataGrid.ItemsSource = inventory;
-           orderListView.ItemsSource = cart.cartBooks;
-        }
-
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            addButton.IsEnabled = false;
-            removeButton.IsEnabled = false;
-            clearCart.IsEnabled = false;
-        }
-
-        private decimal GetSubTotal() // subtotal calculation
-        {
-            decimal subtotal = 0;
-            foreach (var book in cart.cartBooks)
-            {
-                subtotal += book.Price * book.Quantity;
-            }
-            subtotalTextBlock.Text = $"Subtotal: ${subtotal:F2}";
-            return subtotal;
-        }
-
-        private void updateCart() // for cart UI refresh
-        {
-            // cart.ExpiredBooks();
-            orderListView.ItemsSource = null;
-            orderListView.ItemsSource = cart.cartBooks;
-            var subtotal = GetSubTotal();
-        }
-
-        private void addButton_Click(object sender, RoutedEventArgs e) // add button
+        // ─────────────────────────────────────────────
+        // ADD BOOK BUTTON
+        // ─────────────────────────────────────────────
+        private void addButton_Click(object sender, RoutedEventArgs e)
         {
             Book bookChoice = (Book)ProductsDataGrid.SelectedItem;
 
-            // handling if no book is selected
             if (bookChoice == null)
             {
-                statusTextBlock.Text = "Error: Please select a book.";
+                statusTextBlock.Text = "Select a book first.";
                 statusTextBlock.Foreground = Brushes.Red;
                 return;
             }
 
             if (cart.addBook(bookChoice))
             {
-                // pass to add book for boolean return
                 updateCart();
-                statusTextBlock.Text = "SUCCESS: Added to cart!";
+                statusTextBlock.Text = "Added to cart!";
                 statusTextBlock.Foreground = Brushes.Green;
-            }
-            else
-            {
-                statusTextBlock.Text = "ERROR: Please try again.";
-                statusTextBlock.Foreground = Brushes.Red;
             }
         }
 
+        // ─────────────────────────────────────────────
+        // REMOVE BOOK
+        // ─────────────────────────────────────────────
         private void removeButton_Click(object sender, RoutedEventArgs e)
         {
             Book bookChoice = (Book)orderListView.SelectedItem;
 
-            // handling if no book is selected
             if (bookChoice == null)
             {
-                statusTextBlock.Text = "ERROR: Book not selected.";
+                statusTextBlock.Text = "Select a book to remove.";
                 statusTextBlock.Foreground = Brushes.Red;
                 return;
             }
@@ -272,44 +207,131 @@ namespace BookStoreGUI
             if (cart.removeBook(bookChoice))
             {
                 updateCart();
-                statusTextBlock.Text = "SUCCESS: Removed from cart!";
+                statusTextBlock.Text = "Removed from cart!";
                 statusTextBlock.Foreground = Brushes.Green;
-            }
-            else
-            {
-                statusTextBlock.Text = "ERROR: Unable to remove from cart.";
-                statusTextBlock.Foreground = Brushes.Red;
             }
         }
 
+        // ─────────────────────────────────────────────
+        // CLEAR CART
+        // ─────────────────────────────────────────────
         private void clearCart_Click(object sender, RoutedEventArgs e)
         {
             if (cart.cartBooks.Count == 0)
             {
-                statusTextBlock.Text = "ERROR: Cart already empty.";
+                statusTextBlock.Text = "Cart already empty.";
                 statusTextBlock.Foreground = Brushes.Red;
                 return;
             }
+
             cart.clearCart();
             updateCart();
-            statusTextBlock.Text = "SUCCESS: Cart cleared!";
+
+            statusTextBlock.Text = "Cart cleared!";
             statusTextBlock.Foreground = Brushes.Green;
         }
-        private void checkoutButton_Click(object sender, RoutedEventArgs e) {
+
+        // ─────────────────────────────────────────────
+        // CHECKOUT
+        // ─────────────────────────────────────────────
+        private void checkoutButton_Click(object sender, RoutedEventArgs e)
+        {
             if (cart.cartBooks.Count == 0)
             {
-                MessageBox.Show("An error occurred while opening registration:\n" + ex.Message,
-                                "Error",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Error);
+                MessageBox.Show("Your cart is empty.");
+                return;
             }
 
-            var checkout = new CheckoutWindow(cart.cartBooks)
-            {
-                Owner = this
-            };
-
+            var checkout = new CheckoutWindow(cart.cartBooks) { Owner = this };
             checkout.ShowDialog();
+        }
+
+        // ─────────────────────────────────────────────
+        // LOAD BOOKS FROM DB
+        // ─────────────────────────────────────────────
+        public void LoadBooks()
+        {
+            string connStr =
+                "Data Source=tfs.cs.uwindsor.ca;Initial Catalog=Agile1422DB25;" +
+                "Persist Security Info=True;User ID=Agile1422U25;Password=Agile1422U25$;" +
+                "Encrypt=True;TrustServerCertificate=True";
+
+            using (var conn = new SqlConnection(connStr))
+            {
+                conn.Open();
+                var cmd = new SqlCommand(
+                    "SELECT ISBN, CategoryID, Title, Author, Price, Year, InStock FROM BookData",
+                    conn);
+
+                using (var r = cmd.ExecuteReader())
+                {
+                    inventory.Clear();
+                    while (r.Read())
+                    {
+                        inventory.Add(new Book
+                        {
+                            ISBN = r.GetString(0),
+                            CategoryID = r.GetInt32(1),
+                            Title = r.GetString(2),
+                            Author = r.GetString(3),
+                            Price = r.GetDecimal(4),
+                            Year = r.GetString(5),
+                            InStock = r.GetInt32(6)
+                        });
+                    }
+                }
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        // LOAD CART
+        // ─────────────────────────────────────────────
+        public void LoadCart()
+        {
+            string connStr =
+                "Data Source=tfs.cs.uwindsor.ca;Initial Catalog=Agile1422DB25;" +
+                "Persist Security Info=True;User ID=Agile1422U25;Password=Agile1422U25$;" +
+                "Encrypt=True;TrustServerCertificate=True";
+
+            using (var conn = new SqlConnection(connStr))
+            {
+                conn.Open();
+                var cmd = new SqlCommand("SELECT ISBN, Quantity, Subtotal FROM Cart", conn);
+
+                using (var r = cmd.ExecuteReader())
+                {
+                    cart.cartBooks.Clear();
+                    while (r.Read())
+                    {
+                        cart.addBook(new Book
+                        {
+                            ISBN = r.GetString(0),
+                            Quantity = r.GetInt32(1),
+                            Subtotal = r.GetDecimal(2)
+                        });
+                    }
+                }
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        // UPDATE CART UI
+        // ─────────────────────────────────────────────
+        private void updateCart()
+        {
+            orderListView.ItemsSource = null;
+            orderListView.ItemsSource = cart.cartBooks;
+            GetSubTotal();
+        }
+
+        private decimal GetSubTotal()
+        {
+            decimal subtotal = 0;
+            foreach (var book in cart.cartBooks)
+                subtotal += book.Price * book.Quantity;
+
+            subtotalTextBlock.Text = $"Subtotal: ${subtotal:F2}";
+            return subtotal;
         }
     }
 }
