@@ -1,5 +1,6 @@
 ﻿import BooksSection from "../components/BooksSection";
 import Button from "../components/Button";
+import Recommendations from "../components/Recommendations";
 
 interface BookItem {
     id: string;
@@ -93,18 +94,11 @@ export default function Home({ cart, setCart }: HomeProps) {
             {/* PASS cart props to BooksSection */}
             <BooksSection cart={cart} setCart={setCart} />
 
-            {/* Placeholder for Recommendation Section */}
-            <section className="bg-gray-100 py-24 text-center">
-                <h2 className="text-3xl font-semibold text-gray-700">
-                    {user ? "Your Recommendations" : "Recommendations"}
-                </h2>
-                <p className="text-gray-500 mt-4">
-                    {user
-                        ? "Personalized book suggestions based on your interests"
-                        : "Personalized book suggestions will appear here after you login."
-                    }
-                </p>
-            </section>
+            {/* Recommendations row (uses same look-and-feel as BooksSection cards) */}
+            <h2 className="text-3xl font-semibold text-gray-700 text-center bg-white w-full py-4">
+                Recommendations
+            </h2>
+            <Recommendations cart={cart} setCart={setCart} maxItems={4} />
         </main>
     );
 }
