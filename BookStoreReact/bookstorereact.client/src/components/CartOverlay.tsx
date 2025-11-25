@@ -1,6 +1,6 @@
 ﻿import { TablerX } from '../icons/Close';
 import { TablerShoppingCart } from '../icons/Cart';
-import { PaymentForm } from '../pages/PaymentForm';
+// import { PaymentForm } from '../pages/PaymentForm';
 
 interface BookItem {
     id: string;
@@ -52,9 +52,9 @@ export function CartOverlay({ isOpen, onClose, cart, setCart }: CartOverlayProps
     const getTotalPrice = () => cart.reduce((total, item) => total + (item.book.price * item.quantity), 0);
     const getItemTotal = (item: CartItem) => item.book.price * item.quantity;
 
-    function proceedToCheckout(getTotalItems: () => number, getTotalPrice: () => number, getItemTotal: (item: CartItem) => number) {
-        throw new Error('Function not implemented.');
-    }
+    //function proceedToCheckout(getTotalItems: () => number, getTotalPrice: () => number, getItemTotal: (item: CartItem) => number) {
+    //    throw new Error('Function not implemented.');
+    //}
 
     return (
         <div
