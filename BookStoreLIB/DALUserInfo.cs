@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Security.Cryptography;
@@ -11,18 +10,12 @@ namespace BookStoreLIB
         // -------------------- Connection resolution --------------------
         private static string ResolveConn()
         {
-            var raw = ConfigurationManager.ConnectionStrings["BookStoreRemote"]?.ConnectionString;
-            if (!string.IsNullOrWhiteSpace(raw))
-            {
-                var expanded = Environment.ExpandEnvironmentVariables(raw);
-                var csb = new SqlConnectionStringBuilder(expanded);
-                return csb.ConnectionString;
-            }
-
+            // Just use environment variables; no ConfigurationManager
             var user = Environment.GetEnvironmentVariable("AGILE_DB_USER");
             var pass = Environment.GetEnvironmentVariable("AGILE_DB_PASSWORD");
             var server = Environment.GetEnvironmentVariable("AGILE_DB_SERVER") ?? "tfs.cs.uwindsor.ca";
             var db = Environment.GetEnvironmentVariable("AGILE_DB_NAME") ?? "Agile1422DB25";
+
             if (string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(pass))
                 throw new InvalidOperationException("Missing AGILE_DB_USER/AGILE_DB_PASSWORD.");
 
@@ -36,6 +29,7 @@ namespace BookStoreLIB
                 Encrypt = true,
                 TrustServerCertificate = true
             };
+
             return cs.ConnectionString;
         }
 

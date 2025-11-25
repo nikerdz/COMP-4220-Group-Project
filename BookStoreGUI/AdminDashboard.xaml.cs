@@ -1,58 +1,59 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using BookStoreGUI;
+﻿using System.Windows;
 
 namespace BookStoreGUI
 {
     public partial class AdminDashboard : Window
     {
-        public AdminDashboard() // Keeping this because this is our default constructor
+        private readonly string _login;
+
+        public AdminDashboard(string username)
         {
-            // InitializeComponent();
-        }
-        public AdminDashboard(string username) : this() 
-        {
-            // TxtCurrentUser.Text = $"Admin: {username}";
+            InitializeComponent();
+            _login = string.IsNullOrWhiteSpace(username) ? "admin" : username;
+            TxtCurrentUser.Text = $"Admin: {_login}";
+
+            // Default landing text
+            ContentHost.Content = new System.Windows.Controls.TextBlock
+            {
+                Text = "Select a section from the left menu.",
+                Margin = new Thickness(20),
+                FontSize = 16
+            };
         }
 
-        // Header: Logout
         private void BtnLogout_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Logout clicked (TODO: implement sign-out)");
             Close();
         }
 
-        // Left Nav
         private void NavInventory_Click(object sender, RoutedEventArgs e)
         {
-            // TODO: load Inventory view into ContentHost
-            MessageBox.Show("Inventory clicked (TODO)");
+            ContentHost.Content = new Pages.InventoryPage();
         }
 
         private void NavCategories_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Categories clicked (TODO)");
+            ContentHost.Content = new Pages.CategoriesPage();
         }
 
         private void NavOffers_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Offers clicked (TODO)");
+            ContentHost.Content = new Pages.CouponsPage();
+        }
+
+        private void NavUsers_Click(object sender, RoutedEventArgs e)
+        {
+            ContentHost.Content = new Pages.UsersPage();
         }
 
         private void NavOrders_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Orders clicked (TODO)");
+            ContentHost.Content = new Pages.OrdersPage();
+        }
+
+        private void NavSuppliers_Click(object sender, RoutedEventArgs e)
+        {
+            ContentHost.Content = new BookStoreGUI.Pages.SuppliersPage();
         }
     }
 }
