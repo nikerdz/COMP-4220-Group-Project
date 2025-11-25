@@ -84,8 +84,10 @@ namespace BookStoreGUI
                     if (userData.LogIn(dlg.nameTextBox.Text, dlg.passwordTextBox.Password))
                     {
                         statusTextBlock.Text = "You are logged in as: " + userData.LoginName;
+
                         loginButton.Visibility = Visibility.Collapsed;
                         logoutButton.Visibility = Visibility.Visible;
+
                         addButton.IsEnabled = true;
                         removeButton.IsEnabled = true;
                         clearCart.IsEnabled = true;
@@ -103,7 +105,7 @@ namespace BookStoreGUI
                         MessageBox.Show("You could not be verified. Please try again.");
                     }
                 }
-                catch (ArgumentException ex)
+                catch (Exception ex)
                 {
                     MessageBox.Show(ex.Message, "Validation error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
@@ -138,7 +140,6 @@ namespace BookStoreGUI
             {
                 MessageBox.Show("Logout failed: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-        }
 
         private void PerformLogout()
         {
@@ -150,6 +151,8 @@ namespace BookStoreGUI
             addButton.IsEnabled = false;
             removeButton.IsEnabled = false;
             clearCart.IsEnabled = false;
+
+            statusTextBlock.Foreground = Brushes.Black;
         }
 
         // SELECTION changed for products grid
@@ -165,7 +168,7 @@ namespace BookStoreGUI
             var bookChoice = ProductsDataGrid.SelectedItem as Book;
             if (bookChoice == null)
             {
-                statusTextBlock.Text = "Error: Please select a book.";
+                statusTextBlock.Text = "Select a book first.";
                 statusTextBlock.Foreground = Brushes.Red;
                 return;
             }
@@ -173,22 +176,20 @@ namespace BookStoreGUI
             if (cart.addBook(bookChoice))
             {
                 updateCart();
-                statusTextBlock.Text = "SUCCESS: Added to cart!";
+                statusTextBlock.Text = "Added to cart!";
                 statusTextBlock.Foreground = Brushes.Green;
-            }
-            else
-            {
-                statusTextBlock.Text = "ERROR: Please try again.";
-                statusTextBlock.Foreground = Brushes.Red;
             }
         }
 
+        // ─────────────────────────────────────────────
+        // REMOVE BOOK
+        // ─────────────────────────────────────────────
         private void removeButton_Click(object sender, RoutedEventArgs e)
         {
             var bookChoice = orderListView.SelectedItem as Book;
             if (bookChoice == null)
             {
-                statusTextBlock.Text = "ERROR: Book not selected.";
+                statusTextBlock.Text = "Select a book to remove.";
                 statusTextBlock.Foreground = Brushes.Red;
                 return;
             }
@@ -196,27 +197,27 @@ namespace BookStoreGUI
             if (cart.removeBook(bookChoice))
             {
                 updateCart();
-                statusTextBlock.Text = "SUCCESS: Removed from cart!";
+                statusTextBlock.Text = "Removed from cart!";
                 statusTextBlock.Foreground = Brushes.Green;
-            }
-            else
-            {
-                statusTextBlock.Text = "ERROR: Unable to remove from cart.";
-                statusTextBlock.Foreground = Brushes.Red;
             }
         }
 
+        // ─────────────────────────────────────────────
+        // CLEAR CART
+        // ─────────────────────────────────────────────
         private void clearCart_Click(object sender, RoutedEventArgs e)
         {
             if (cart.cartBooks.Count == 0)
             {
-                statusTextBlock.Text = "ERROR: Cart already empty.";
+                statusTextBlock.Text = "Cart already empty.";
                 statusTextBlock.Foreground = Brushes.Red;
                 return;
             }
+
             cart.clearCart();
             updateCart();
-            statusTextBlock.Text = "SUCCESS: Cart cleared!";
+
+            statusTextBlock.Text = "Cart cleared!";
             statusTextBlock.Foreground = Brushes.Green;
         }
 

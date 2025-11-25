@@ -200,11 +200,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AddInventoryTests.cs" />
     <Compile Include="Book.cs" />
     <Compile Include="Cart.cs" />
+    <Compile Include="CategoriesTests.cs" />
     <Compile Include="Coupon.cs" />
     <Compile Include="CouponDAL.cs" />
     <Compile Include="CouponUnitTests.cs" />
+    <Compile Include="DiscountDataTests.cs" />
+    <Compile Include="EditInventoryTests.cs" />
+    <Compile Include="OffersTests.cs" />
     <Compile Include="PaymentUnitTests.cs" />
     <Compile Include="PaymentRules.cs" />
     <Compile Include="LogoutUnitTest.cs" />
@@ -216,6 +221,8 @@
     </Compile>
     <Compile Include="RegisterTests.cs" />
     <Compile Include="CartSubtotalTesting.cs" />
+    <Compile Include="RemoveInventoryTests.cs" />
+    <Compile Include="SuppliersTests.cs" />
     <Compile Include="UserData.cs" />
     <Compile Include="DALUserInfo.cs" />
     <Compile Include="LoginUnitTests.cs" />

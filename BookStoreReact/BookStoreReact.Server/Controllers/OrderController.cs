@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using BookStoreReact.Server.Models;
 using BookStoreReact.Server.Data;
+using BookStoreLIB;
 
 namespace BookStoreReact.Server.Controllers
 {
@@ -22,6 +23,7 @@ namespace BookStoreReact.Server.Controllers
             public string PaymentMethod { get; set; } = ""; // Last 4 digits or card type
             public decimal DeliveryFee { get; set; } = 0m;
             public decimal TaxRate { get; set; } = 0.13m;
+            public string CouponCode { get; set; } // Added for coupon support
             public List<OrderItemRequest> Items { get; set; } = new List<OrderItemRequest>();
         }
 
@@ -74,6 +76,30 @@ namespace BookStoreReact.Server.Controllers
 
                     subtotal += orderItem.Subtotal;
                     orderItems.Add(orderItem);
+                }
+
+                // Apply Coupon if provided
+                if (!string.IsNullOrWhiteSpace(req.CouponCode))
+                {
+                    var coupon = CouponDAL.LoadCoupon(req.CouponCode);
+                    var couponInstance = new Coupon(); // Needed to call instance methods if they are not static
+                    
+                    // Check if coupon exists and is valid
+                    if (coupon != null && couponInstance.ValidateCoupon(coupon))
+                    {
+                        // ApplyDiscount returns the NEW subtotal (e.g., 80 -> 56)
+                        subtotal = couponInstance.ApplyDiscount(subtotal, coupon);
+                        
+                        // Ensure subtotal doesn't go negative (though logic shouldn't allow it)
+                        if (subtotal < 0) subtotal = 0;
+
+                        // Increment usage
+                        CouponDAL.IncrementUsage(coupon.CouponID);
+                    }
+                    else
+                    {
+                        return BadRequest(new { message = "Invalid or expired coupon code." });
+                    }
                 }
 
                 decimal taxAmount = subtotal * req.TaxRate;

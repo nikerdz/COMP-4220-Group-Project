@@ -34,6 +34,7 @@ export default function Profile() {
                     />
                 </nav>
             </aside>
+
             {/* middle content */}
             <div className="h-64 border-l mx-8" />
             <main className="flex-1 flex justify-center">

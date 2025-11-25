@@ -4,25 +4,19 @@ namespace BookStoreGUI
 {
     public partial class AdminDashboard : Window
     {
-        private readonly string _loginName;
+        private readonly string _login;
 
-        // Single constructor; always initialize XAML first
         public AdminDashboard(string username)
         {
-            InitializeComponent();                    
-            _loginName = string.IsNullOrWhiteSpace(username) ? "admin" : username;
-            TxtCurrentUser.Text = $"Admin: {_loginName}";
+            InitializeComponent();
+            _login = string.IsNullOrWhiteSpace(username) ? "admin" : username;
+            TxtCurrentUser.Text = $"Admin: {_login}";
 
-            // Optional: show a default landing view so the content area isn’t empty
-            ContentHost.Content = BuildWelcome();
-        }
-
-        private UIElement BuildWelcome()
-        {
-            return new System.Windows.Controls.TextBlock
+            // Default landing text
+            ContentHost.Content = new System.Windows.Controls.TextBlock
             {
-                Text = "Welcome! Pick a section on the left (Inventory, Categories, Offers, Orders).",
-                Margin = new Thickness(24),
+                Text = "Select a section from the left menu.",
+                Margin = new Thickness(20),
                 FontSize = 16
             };
         }
@@ -34,38 +28,32 @@ namespace BookStoreGUI
 
         private void NavInventory_Click(object sender, RoutedEventArgs e)
         {
-            ContentHost.Content = new System.Windows.Controls.TextBlock
-            {
-                Text = "Inventory — coming soon.",
-                Margin = new Thickness(24)
-            };
+            ContentHost.Content = new Pages.InventoryPage();
         }
 
         private void NavCategories_Click(object sender, RoutedEventArgs e)
         {
-            ContentHost.Content = new System.Windows.Controls.TextBlock
-            {
-                Text = "Categories — coming soon.",
-                Margin = new Thickness(24)
-            };
+            ContentHost.Content = new Pages.CategoriesPage();
         }
 
         private void NavOffers_Click(object sender, RoutedEventArgs e)
         {
-            ContentHost.Content = new System.Windows.Controls.TextBlock
-            {
-                Text = "Offers — coming soon.",
-                Margin = new Thickness(24)
-            };
+            ContentHost.Content = new Pages.CouponsPage();
+        }
+
+        private void NavUsers_Click(object sender, RoutedEventArgs e)
+        {
+            ContentHost.Content = new Pages.UsersPage();
         }
 
         private void NavOrders_Click(object sender, RoutedEventArgs e)
         {
-            ContentHost.Content = new System.Windows.Controls.TextBlock
-            {
-                Text = "Orders — coming soon.",
-                Margin = new Thickness(24)
-            };
+            ContentHost.Content = new Pages.OrdersPage();
+        }
+
+        private void NavSuppliers_Click(object sender, RoutedEventArgs e)
+        {
+            ContentHost.Content = new BookStoreGUI.Pages.SuppliersPage();
         }
     }
 }

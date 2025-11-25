@@ -81,6 +81,8 @@ const sampleBooks: BookItem[] = [
         imageUrl: "",
         shortDescription: "",
         description: "",
+        price: 0,
+        inStock: 0
     },
     {
         id: "2",
@@ -90,6 +92,8 @@ const sampleBooks: BookItem[] = [
         imageUrl: "",
         shortDescription: "",
         description: "",
+        price: 0,
+        inStock: 0
     },
     {
         id: "3",
@@ -99,6 +103,8 @@ const sampleBooks: BookItem[] = [
         imageUrl: "",
         shortDescription: "",
         description: "",
+        price: 0,
+        inStock: 0
     },
 ];
 
