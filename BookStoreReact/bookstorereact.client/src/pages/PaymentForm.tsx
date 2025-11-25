@@ -1,6 +1,6 @@
-//import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
-//function proceedToCheckout() {
-//    setIsCheckoutOpen(true);
+function proceedToCheckout() {
+    setIsCheckoutOpen(true);
 
-//}
+}
