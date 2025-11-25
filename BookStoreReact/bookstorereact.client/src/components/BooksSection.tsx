@@ -75,7 +75,6 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
     const getCategoryClass = (category: string): string =>
         categoryColors[category] || categoryColors.Default;
 
-    // NEW: apply search filter on every render
     const filteredBooks = filterBooks(books, search);
 
     return (

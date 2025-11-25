@@ -1,6 +1,6 @@
 ﻿import { TablerX } from '../icons/Close';
 import { TablerShoppingCart } from '../icons/Cart';
-// import { PaymentForm } from '../pages/PaymentForm';
+//import { PaymentForm } from '../pages/PaymentForm';
 
 interface BookItem {
     id: string;
