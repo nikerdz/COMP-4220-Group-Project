@@ -67,7 +67,7 @@ export function mapBackendToBookItem(b: BackendBook): BookItem {
         author: b.author,
         category,
         imageUrl: coverMap[category] || coverMap.Default,
-        shortDescription: `Published ${b.year}. $${priceStr}.`,
+        shortDescription: `Published ${b.year}. $${priceStr}. In stock: ${b.inStock}`,
         description: `Publisher: ${b.publisher ?? "Unknown"}. Edition: ${b.edition ?? "N/A"}.`,
         price: b.price,
         inStock: b.inStock,
