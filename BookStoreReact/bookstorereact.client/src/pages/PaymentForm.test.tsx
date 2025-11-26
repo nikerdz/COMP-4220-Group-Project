@@ -2,7 +2,8 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import PaymentForm, { PaymentFormProps } from "./PaymentForm";
+import PaymentForm from "./PaymentForm";
+import type { PaymentFormProps } from "./PaymentForm";
 
 const sampleBook = {
     id: "1",
@@ -36,7 +37,6 @@ describe("PaymentForm", () => {
 
         render(<PaymentForm {...props} />);
 
-        // these WILL FAIL right now because the stub doesn't render them
         expect(screen.getByText(/2 items? in cart/i)).toBeInTheDocument();
         expect(screen.getByText(/Subtotal: \$30\.00/)).toBeInTheDocument();
         expect(screen.getByText(/Tax: \$3\.90/)).toBeInTheDocument();
