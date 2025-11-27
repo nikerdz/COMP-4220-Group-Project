@@ -5,6 +5,7 @@ import {
     type BookItem,
     type BackendBook,
 } from "./booksMapper";
+import { getWishlist, addToWishlist, removeFromWishlist } from "../services/wishlistService";
 
 type CartItem = {
     book: BookItem;
@@ -26,11 +27,23 @@ const categoryColors: Record<string, string> = {
     Default: "bg-[#3B1F16] text-[#F5EBDD]",
 };
 
+function getUserFromLocalStorage() {
+    try {
+        const raw = localStorage.getItem("user");
+        return raw ? JSON.parse(raw) as { userId: number; username: string } : null;
+    } catch {
+        return null;
+    }
+}
+
 export default function BooksSection({ cart, setCart }: BooksSectionProps) {
     const [books, setBooks] = useState<BookItem[]>([]);
     const [selectedBook, setSelectedBook] = useState<BookItem | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [search, setSearch] = useState("");
+    const [wishlistedIds, setWishlistedIds] = useState<Set<string>>(new Set());
+
+    const user = getUserFromLocalStorage();
 
     const addToCart = (book: BookItem) => {
         setCart((prevCart: CartItem[]) => {
@@ -47,30 +60,51 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
         });
     };
 
+    // Load books and wishlist ids (if user)
     useEffect(() => {
-        const fetchBooks = async () => {
+        const load = async () => {
             try {
                 setError(null);
-
                 const res = await fetch("/api/test/books");
-
-                if (!res.ok) {
-                    throw new Error(`HTTP ${res.status}`);
-                }
-
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = (await res.json()) as BackendBook[];
-                const mapped = data.map(mapBackendToBookItem);
+                setBooks(data.map(mapBackendToBookItem));
 
-                setBooks(mapped);
+                if (user) {
+                    const w = await getWishlist(user.userId) as BackendBook[];
+                    setWishlistedIds(new Set(w.map(b => b.isbn)));
+                }
             } catch (err) {
-                // eslint-disable-next-line no-console
                 console.error(err);
                 setError("Failed to load books from server.");
             }
         };
-
-        void fetchBooks();
+        void load();
     }, []);
+
+    const toggleWishlist = async (book: BookItem, e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+        if (!user) {
+            // require login for wishlist
+            window.location.href = "/login";
+            return;
+        }
+        try {
+            if (wishlistedIds.has(book.id)) {
+                await removeFromWishlist(user.userId, book.id);
+                setWishlistedIds(prev => {
+                    const s = new Set(prev);
+                    s.delete(book.id);
+                    return s;
+                });
+            } else {
+                await addToWishlist(user.userId, book.id);
+                setWishlistedIds(prev => new Set(prev).add(book.id));
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     const getCategoryClass = (category: string): string =>
         categoryColors[category] || categoryColors.Default;
@@ -142,15 +176,26 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
                                     {/* Add to cart functionality */}
                                     <div className="mt-auto flex items-center justify-between pt-3">
                                         <div className="text-sm font-bold">${book.price.toFixed(2)}</div>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                addToCart(book);
-                                            }}
-                                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm"
-                                        >
-                                            Add
-                                        </button>
+
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    addToCart(book);
+                                                }}
+                                                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm"
+                                            >
+                                                Add
+                                            </button>
+
+                                            <button
+                                                onClick={(e) => toggleWishlist(book, e)}
+                                                aria-label={wishlistedIds.has(book.id) ? "Remove from wishlist" : "Add to wishlist"}
+                                                className={`p-2 rounded-full transition-colors ${wishlistedIds.has(book.id) ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"}`}
+                                            >
+                                                <span className="text-lg">{wishlistedIds.has(book.id) ? "♥" : "♡"}</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </article>
@@ -190,14 +235,20 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
                                     ${selectedBook.price.toFixed(2)}
                                 </span>
                             </div>
-                            <button
-                                onClick={() => {
-                                    addToCart(selectedBook);
-                                }}
-                                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-                            >
-                                Add to Cart
-                            </button>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => addToCart(selectedBook)}
+                                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                                >
+                                    Add to Cart
+                                </button>
+                                <button
+                                    onClick={() => toggleWishlist(selectedBook)}
+                                    className={`p-2 rounded-full transition-colors ${wishlistedIds.has(selectedBook.id) ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"}`}
+                                >
+                                    {wishlistedIds.has(selectedBook.id) ? "♥" : "♡"}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

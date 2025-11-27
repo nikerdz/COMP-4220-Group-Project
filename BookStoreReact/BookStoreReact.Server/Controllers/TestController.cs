@@ -446,5 +446,105 @@ namespace BookStoreReact.Server.Controllers
 
             return Ok(recs);
         }
+
+        // WISHLIST
+        [HttpGet("wishlist/{userId:int}")]
+        public ActionResult<IEnumerable<Book>> GetWishlist(int userId)
+        {
+            var result = new List<Book>();
+            try
+            {
+                using var conn = new SqlConnection(BuildConnString());
+                conn.Open();
+
+                const string sql = @"
+                    SELECT bd.ISBN, bd.CategoryID, bd.Title, bd.Author, bd.Price, bd.Year, bd.InStock
+                    FROM Wishlist w
+                    JOIN BookData bd ON bd.ISBN = w.ISBN
+                    WHERE w.CustomerID = @UserId";
+
+                using var cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@UserId", userId);
+
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    result.Add(new Book
+                    {
+                        ISBN = reader.GetString(0),
+                        CategoryID = reader.GetInt32(1),
+                        Title = reader.GetString(2),
+                        Author = reader.GetString(3),
+                        Price = reader.GetDecimal(4),
+                        Year = reader.GetString(5),
+                        InStock = reader.GetInt32(6)
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log and return empty wishlist instead of 500 so the frontend remains usable while DB is fixed
+                Console.Error.WriteLine($"GetWishlist error: {ex}");
+                return Ok(new List<Book>());
+            }
+
+            return Ok(result);
+        }
+
+        public class WishlistItemRequest
+        {
+            public int UserId { get; set; }
+            public string ISBN { get; set; } = "";
+        }
+
+        [HttpPost("wishlist/items")]
+        public IActionResult AddWishlistItem([FromBody] WishlistItemRequest req)
+        {
+            try
+            {
+                using var conn = new SqlConnection(BuildConnString());
+                conn.Open();
+
+                // insert if not exists
+                const string sql = @"
+                    IF NOT EXISTS (SELECT 1 FROM Wishlist WHERE CustomerID = @UserId AND ISBN = @ISBN)
+                    INSERT INTO Wishlist (CustomerID, ISBN) VALUES (@UserId, @ISBN)";
+
+                using var cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@UserId", req.UserId);
+                cmd.Parameters.AddWithValue("@ISBN", req.ISBN);
+                cmd.ExecuteNonQuery();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error adding to wishlist", detail = ex.Message });
+            }
+        }
+
+        [HttpDelete("wishlist/items")]
+        public IActionResult RemoveWishlistItem([FromBody] WishlistItemRequest req)
+        {
+            try
+            {
+                using var conn = new SqlConnection(BuildConnString());
+                conn.Open();
+
+                const string sql = "DELETE FROM Wishlist WHERE CustomerID = @UserId AND ISBN = @ISBN";
+
+                using var cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@UserId", req.UserId);
+                cmd.Parameters.AddWithValue("@ISBN", req.ISBN);
+                var rows = cmd.ExecuteNonQuery();
+                if (rows == 0)
+                    return NotFound(new { message = "Item not found in wishlist." });
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error removing from wishlist", detail = ex.Message });
+            }
+        }
     }
 }

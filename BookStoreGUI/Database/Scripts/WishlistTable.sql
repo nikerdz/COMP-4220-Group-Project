@@ -1,4 +1,4 @@
-﻿IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'Wishlist' AND xtype = 'U')
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name = 'Wishlist' AND xtype = 'U')
 BEGIN
     CREATE TABLE [dbo].[Wishlist] (
         [WishlistID] INT IDENTITY(1,1) PRIMARY KEY,
