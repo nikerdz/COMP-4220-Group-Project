@@ -63,7 +63,16 @@ export default function Recommendations({
     const getCategoryClass = (category: string) =>
         categoryColors[category] || categoryColors.Default;
 
-    if (!books || books.length === 0) return null;
+    // When there are no books, still render so error messages are visible to tests / users
+    if (!books || books.length === 0) {
+        return (
+            <section className="bg-white py-8 px-6">
+                <div className="max-w-6xl mx-auto">
+                    {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
+                </div>
+            </section>
+        );
+    }
 
     // guest: show random picks
     if (!cart || cart.length === 0) {
@@ -73,7 +82,6 @@ export default function Recommendations({
         return (
             <section className="bg-white py-8 px-6">
                 <div className="max-w-6xl mx-auto">
-
                     {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
 
                     <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
