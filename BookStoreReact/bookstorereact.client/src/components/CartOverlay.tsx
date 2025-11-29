@@ -1,5 +1,7 @@
 ﻿import { TablerX } from '../icons/Close';
 import { TablerShoppingCart } from '../icons/Cart';
+import  PaymentForm  from '../pages/PaymentForm';
+import { useState } from 'react';
 
 interface BookItem {
     id: string;
@@ -26,6 +28,8 @@ interface CartOverlayProps {
 }
 
 export function CartOverlay({ isOpen, onClose, cart, setCart }: CartOverlayProps) {
+    const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+
     if (!isOpen) return null;
 
     // Remove item from cart
@@ -48,6 +52,20 @@ export function CartOverlay({ isOpen, onClose, cart, setCart }: CartOverlayProps
     const getTotalItems = () => cart.reduce((total, item) => total + item.quantity, 0);
     const getTotalPrice = () => cart.reduce((total, item) => total + (item.book.price * item.quantity), 0);
     const getItemTotal = (item: CartItem) => item.book.price * item.quantity;
+    const subtotal = cart.reduce(
+        (sum, item) => sum + item.book.price * item.quantity,
+        0
+    );
+
+    const TAX_RATE = 0.13;
+    const taxes = subtotal * TAX_RATE;
+
+    const deliveryFee = cart.length > 0 ? 5 : 0;
+
+    function proceedToCheckout() {
+        setIsCheckoutOpen(true);
+    }
+
 
     return (
         <div
@@ -149,9 +167,28 @@ export function CartOverlay({ isOpen, onClose, cart, setCart }: CartOverlayProps
                             </p>
 
                             {/* Checkout button full width */}
-                            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors">
+                            <button
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors"
+                                onClick={proceedToCheckout}
+                                >
                                 Proceed to Checkout
                             </button>
+                            {isCheckoutOpen && (
+                                <PaymentForm
+                                    cart={cart}
+                                    subtotal={subtotal}
+                                    taxes={taxes}
+                                    deliveryFee={deliveryFee}
+                                    onClose={() => setIsCheckoutOpen(false)}
+                                    onSuccess={() => {
+                                        // When payment is confirmed:
+                                        setCart([]);          // clear cart
+                                        setIsCheckoutOpen(false);
+                                        onClose();            // close entire overlay
+                                    }}
+                                />
+                            )}
+
                         </div>
                     </div>
                 )}

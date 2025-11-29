@@ -18,6 +18,8 @@ namespace BookStoreLIB
         public string Edition { get; set; }
         public string Publisher { get; set; }
         public int InStock { get; set; }
+
+        public bool PreOrder { get; set; }
         public int Quantity { get; set; } = 1;
         public decimal Subtotal { get; set; } // change to cost
         public void UpdateCost()
