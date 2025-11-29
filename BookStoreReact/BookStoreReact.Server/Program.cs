@@ -8,49 +8,39 @@ var builder = WebApplication.CreateBuilder(args);
 // 1) Add controllers
 builder.Services.AddControllers();
 
-// 2) Add CORS so React (or other frontends) can call the API
+// 2) Add CORS so React can call the API
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowClient", policy =>
     {
         policy
-            .WithOrigins(
-                "http://localhost:5173",
-                "https://localhost:5173",
-                "http://localhost:3000",
-                "https://localhost:3000")
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowAnyOrigin();  // Dev-friendly
     });
 });
 
-// 3) Swagger (already there)
+// 3) Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// serve the React build (already there)
-app.UseDefaultFiles();
-app.UseStaticFiles();
-
+// 4) Swagger only in Development
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+// 5) HTTPS + Routing + CORS
 app.UseHttpsRedirection();
 
-// 4) enable CORS BEFORE MapControllers
 app.UseCors("AllowClient");
 
 app.UseAuthorization();
 
-// 5) map API controllers
+// 6) Map all API controllers
 app.MapControllers();
-
-// fallback to React
-app.MapFallbackToFile("/index.html");
 
 app.Run();
