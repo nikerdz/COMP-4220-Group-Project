@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Mvc;
-using BookStoreLIB;
 using BookStoreReact.Server.Models;
 using BookStoreReact.Server.Data;
 

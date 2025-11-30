@@ -4,7 +4,6 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using BookStoreReact.Server.Models;
 using BookStoreReact.Server.Data;
-using BookStoreLIB;
 
 namespace BookStoreReact.Server.Controllers
 {
