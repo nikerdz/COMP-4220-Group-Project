@@ -36,6 +36,43 @@ namespace BookStoreReact.Server.Controllers
         }
 
         /// <summary>
+        /// Validate a coupon code
+        /// POST /api/orders/validate-coupon
+        /// </summary>
+        [HttpPost("validate-coupon")]
+        public IActionResult ValidateCoupon([FromBody] string couponCode)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(couponCode))
+                    return BadRequest(new { message = "Coupon code is required." });
+
+                var coupon = CouponDAL.LoadCoupon(couponCode);
+                var couponInstance = new Coupon();
+
+                if (coupon != null && couponInstance.ValidateCoupon(coupon))
+                {
+                    return Ok(new
+                    {
+                        success = true,
+                        code = coupon.Code,
+                        discountRate = coupon.DiscountRate,
+                        description = coupon.Description,
+                        message = "Coupon applied successfully!"
+                    });
+                }
+                else
+                {
+                    return BadRequest(new { message = "Invalid or expired coupon code." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error validating coupon.", detail = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Create a new order
         /// POST /api/orders/create
         /// </summary>

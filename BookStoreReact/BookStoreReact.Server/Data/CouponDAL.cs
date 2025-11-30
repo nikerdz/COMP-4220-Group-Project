@@ -42,8 +42,8 @@ namespace BookStoreReact.Server.Data
             using (var conn = new SqlConnection(ResolveConn()))
             {
                 conn.Open();
-                // Assuming table name is 'Coupons' based on standard naming conventions
-                var sql = "SELECT CouponID, Code, DiscountRate, IsActive, StartDate, EndDate, UsageLimit, TimesUsed FROM Coupons WHERE Code = @Code";
+                // Table name is 'Coupon' based on user screenshot
+                var sql = "SELECT CouponID, Code, Description, DiscountRate, IsActive, StartDate, EndDate, UsageLimit, TimesUsed FROM Coupon WHERE Code = @Code";
                 
                 using (var cmd = new SqlCommand(sql, conn))
                 {
@@ -56,6 +56,7 @@ namespace BookStoreReact.Server.Data
                             {
                                 CouponID = (int)reader["CouponID"],
                                 Code = (string)reader["Code"],
+                                Description = reader["Description"] as string,
                                 DiscountRate = (decimal)reader["DiscountRate"],
                                 IsActive = (bool)reader["IsActive"],
                                 StartDate = reader["StartDate"] as DateTime?,
@@ -75,7 +76,7 @@ namespace BookStoreReact.Server.Data
             using (var conn = new SqlConnection(ResolveConn()))
             {
                 conn.Open();
-                var sql = "UPDATE Coupons SET TimesUsed = ISNULL(TimesUsed, 0) + 1 WHERE CouponID = @CouponID";
+                var sql = "UPDATE Coupon SET TimesUsed = ISNULL(TimesUsed, 0) + 1 WHERE CouponID = @CouponID";
                 
                 using (var cmd = new SqlCommand(sql, conn))
                 {

@@ -1,5 +1,6 @@
 ﻿import { TablerX } from '../icons/Close';
 import { TablerShoppingCart } from '../icons/Cart';
+import { useState } from 'react';
 
 interface BookItem {
     id: string;
@@ -87,9 +88,53 @@ export function CartOverlay({ isOpen, onClose, cart, setCart }: CartOverlayProps
         }
     };
 
+    // Coupon State
+    const [couponCode, setCouponCode] = useState("");
+    const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountRate: number; description: string } | null>(null);
+    const [couponMessage, setCouponMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    const handleApplyCoupon = async () => {
+        if (!couponCode.trim()) return;
+
+        try {
+            const response = await fetch("http://localhost:5187/api/orders/validate-coupon", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(couponCode)
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                setAppliedCoupon({
+                    code: data.code,
+                    discountRate: data.discountRate,
+                    description: data.description
+                });
+                setCouponMessage({ type: 'success', text: `Coupon applied: ${data.description}` });
+            } else {
+                setAppliedCoupon(null);
+                setCouponMessage({ type: 'error', text: `${data.message} ${data.detail ? '(' + data.detail + ')' : ''}` || "Invalid coupon" });
+            }
+        } catch (err) {
+            console.error("Error applying coupon:", err);
+            setCouponMessage({ type: 'error', text: "Failed to apply coupon. Please try again." });
+        }
+    };
+
     // Calculate totals
     const getTotalItems = () => cart.reduce((total, item) => total + item.quantity, 0);
-    const getTotalPrice = () => cart.reduce((total, item) => total + (item.book.price * item.quantity), 0);
+    const getSubtotal = () => cart.reduce((total, item) => total + (item.book.price * item.quantity), 0);
+
+    const getDiscountAmount = () => {
+        if (!appliedCoupon) return 0;
+        return getSubtotal() * appliedCoupon.discountRate;
+    };
+
+    const getFinalTotal = () => {
+        return getSubtotal() - getDiscountAmount();
+    };
+
     const getItemTotal = (item: CartItem) => item.book.price * item.quantity;
 
     return (
@@ -178,12 +223,44 @@ export function CartOverlay({ isOpen, onClose, cart, setCart }: CartOverlayProps
                 {cart.length > 0 && (
                     <div className="border-t p-6 shrink-0">
                         <div className="space-y-4">
-                            {/* Final Subtotal on the right */}
-                            <div className="flex justify-between items-center">
-                                <span className="text-lg text-gray-600">Subtotal</span>
-                                <span className="text-xl font-bold text-gray-900">
-                                    ${getTotalPrice().toFixed(2)}
-                                </span>
+                            {/* Coupon Section */}
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="Coupon Code"
+                                    value={couponCode}
+                                    onChange={(e) => setCouponCode(e.target.value)}
+                                    className="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                                <button
+                                    onClick={handleApplyCoupon}
+                                    className="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                                >
+                                    Apply
+                                </button>
+                            </div>
+                            {couponMessage && (
+                                <p className={`text-sm ${couponMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                                    {couponMessage.text}
+                                </p>
+                            )}
+
+                            {/* Totals */}
+                            <div className="space-y-2 pt-2 border-t">
+                                <div className="flex justify-between items-center text-gray-600">
+                                    <span>Subtotal</span>
+                                    <span>${getSubtotal().toFixed(2)}</span>
+                                </div>
+                                {appliedCoupon && (
+                                    <div className="flex justify-between items-center text-green-600">
+                                        <span>Discount ({appliedCoupon.code})</span>
+                                        <span>-${getDiscountAmount().toFixed(2)}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between items-center text-xl font-bold text-gray-900 pt-2 border-t">
+                                    <span>Total</span>
+                                    <span>${getFinalTotal().toFixed(2)}</span>
+                                </div>
                             </div>
 
                             {/* Shipping notice on the left */}
