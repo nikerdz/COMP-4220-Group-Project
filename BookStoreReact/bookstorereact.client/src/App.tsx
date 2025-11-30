@@ -5,7 +5,7 @@ import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Contact from "./pages/Contact";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 //NO HEADER PAGES BELOW IMPORT
 import NotFound from "./pages/NotFound";
@@ -29,6 +29,43 @@ interface CartItem {
 
 export default function App() {
     const [cart, setCart] = useState<CartItem[]>([]);
+
+    useEffect(() => {
+        const fetchCart = async () => {
+            try {
+                const userDataStr = localStorage.getItem("user");
+                if (!userDataStr) return;
+
+                const user = JSON.parse(userDataStr);
+                if (!user || !user.userId) return;
+
+                const res = await fetch(`http://localhost:5187/api/cart/${user.userId}`);
+                if (res.ok) {
+                    const books = await res.json();
+                    // Map backend Book model to frontend CartItem
+                    const cartItems: CartItem[] = books.map((b: any) => ({
+                        book: {
+                            id: b.isbn,
+                            title: b.title,
+                            author: b.author,
+                            category: "Default",
+                            imageUrl: `/books/${b.title}.jpg`,
+                            shortDescription: "",
+                            description: "",
+                            price: b.price,
+                            inStock: b.inStock
+                        },
+                        quantity: b.quantity
+                    }));
+                    setCart(cartItems);
+                }
+            } catch (err) {
+                console.error("Failed to fetch cart:", err);
+            }
+        };
+
+        fetchCart();
+    }, []);
 
     return (
         <Routes>

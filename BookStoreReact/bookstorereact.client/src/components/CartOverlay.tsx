@@ -29,12 +29,35 @@ export function CartOverlay({ isOpen, onClose, cart, setCart }: CartOverlayProps
     if (!isOpen) return null;
 
     // Remove item from cart
-    const removeFromCart = (bookId: string) => {
+    const removeFromCart = async (bookId: string) => {
+        const itemToRemove = cart.find(item => item.book.id === bookId);
         setCart(cart.filter(item => item.book.id !== bookId));
+
+        if (itemToRemove) {
+            try {
+                const userDataStr = localStorage.getItem("user");
+                if (userDataStr) {
+                    const user = JSON.parse(userDataStr);
+                    if (user && user.userId) {
+                        await fetch("http://localhost:5187/api/cart/remove", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                userId: user.userId,
+                                isbn: bookId,
+                                quantity: itemToRemove.quantity
+                            })
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to remove from cart backend:", err);
+            }
+        }
     };
 
     // Update quantity
-    const updateQuantity = (bookId: string, quantity: number) => {
+    const updateQuantity = async (bookId: string, quantity: number) => {
         if (quantity <= 0) {
             removeFromCart(bookId);
             return;
@@ -42,6 +65,26 @@ export function CartOverlay({ isOpen, onClose, cart, setCart }: CartOverlayProps
         setCart(cart.map(item =>
             item.book.id === bookId ? { ...item, quantity } : item
         ));
+
+        try {
+            const userDataStr = localStorage.getItem("user");
+            if (userDataStr) {
+                const user = JSON.parse(userDataStr);
+                if (user && user.userId) {
+                    await fetch("http://localhost:5187/api/cart/update", {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            userId: user.userId,
+                            isbn: bookId,
+                            quantity: quantity
+                        })
+                    });
+                }
+            }
+        } catch (err) {
+            console.error("Failed to update cart backend:", err);
+        }
     };
 
     // Calculate totals

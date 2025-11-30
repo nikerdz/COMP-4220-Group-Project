@@ -16,6 +16,16 @@ const categoryColors: Record<string, string> = {
     Default: "bg-[#3B1F16] text-[#F5EBDD]",
 };
 
+interface CartItem {
+    book: BookItem;
+    quantity: number;
+}
+
+interface BooksSectionProps {
+    cart: CartItem[];
+    setCart: (cart: CartItem[] | ((prev: CartItem[]) => CartItem[])) => void;
+}
+
 
 
 export default function BooksSection({ cart, setCart }: BooksSectionProps) {
@@ -24,7 +34,8 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
     const [error, setError] = useState<string | null>(null);
     const [search, setSearch] = useState("");
 
-    const addToCart = (book: BookItem) => {
+    const addToCart = async (book: BookItem) => {
+        // Optimistic UI update
         setCart((prevCart: CartItem[]) => {
             const existingItem = prevCart.find(item => item.book.id === book.id);
             if (existingItem) {
@@ -37,6 +48,27 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
                 return [...prevCart, { book, quantity: 1 }];
             }
         });
+
+        // Backend update
+        try {
+            const userDataStr = localStorage.getItem("user");
+            if (userDataStr) {
+                const user = JSON.parse(userDataStr);
+                if (user && user.userId) {
+                    await fetch("http://localhost:5187/api/cart/add", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            userId: user.userId,
+                            isbn: book.id,
+                            quantity: 1
+                        })
+                    });
+                }
+            }
+        } catch (err) {
+            console.error("Failed to add to cart backend:", err);
+        }
     };
 
     useEffect(() => {
