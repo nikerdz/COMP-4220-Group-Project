@@ -10,6 +10,13 @@ namespace BookStoreReact.Server.Data
     {
         public static string ResolveConn()
         {
+            var fullConnString = Environment.GetEnvironmentVariable("AGILE_DB_CONNECTION_STRING");
+            if (!string.IsNullOrWhiteSpace(fullConnString))
+            {
+                Console.WriteLine($"[CartDAL] Using connection string from AGILE_DB_CONNECTION_STRING");
+                return fullConnString;
+            }
+
             var user = Environment.GetEnvironmentVariable("AGILE_DB_USER");
             var pass = Environment.GetEnvironmentVariable("AGILE_DB_PASSWORD");
             var server = Environment.GetEnvironmentVariable("AGILE_DB_SERVER") ?? "tfs.cs.uwindsor.ca";
@@ -29,6 +36,7 @@ namespace BookStoreReact.Server.Data
                 TrustServerCertificate = true
             };
 
+            Console.WriteLine($"[CartDAL] Connecting to Server: {server}, Database: {db}");
             return cs.ConnectionString;
         }
 
