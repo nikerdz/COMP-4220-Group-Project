@@ -47,6 +47,31 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
         });
     };
 
+    const addToWishlist = async (book: BookItem) => {
+        if (!localStorage.getItem("user")) {
+            alert("You must log in first.");
+            return;
+        }
+
+        const user = JSON.parse(localStorage.getItem("user")!);
+
+        const res = await fetch("/api/wishlist/add", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                userId: user.userId,
+                ISBN: book.id,
+            }),
+        });
+
+        if (res.ok) {
+            alert("Added to wishlist!");
+        } else {
+            alert("Already in wishlist or failed.");
+        }
+    };
+
+
     useEffect(() => {
         const fetchBooks = async () => {
             try {
@@ -149,8 +174,18 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
                                             }}
                                             className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm"
                                         >
-                                            Add
+                                            Add to Cart
                                         </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                addToWishlist(book);
+                                            }}
+                                            className="bg-pink-600 hover:bg-pink-700 text-white px-3 py-1 rounded-lg text-sm"
+                                        >
+                                            ♥
+                                        </button>
+
                                     </div>
                                 </div>
                             </article>
@@ -190,6 +225,7 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
                                     ${selectedBook.price.toFixed(2)}
                                 </span>
                             </div>
+
                             <button
                                 onClick={() => {
                                     addToCart(selectedBook);
