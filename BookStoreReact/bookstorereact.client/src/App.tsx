@@ -45,7 +45,7 @@ export default function App() {
             {/* ROUTES WITH HEADER */}
             <Route element={<MainLayout cart={cart} setCart={setCart} />}>
                 <Route path="/" element={<Home cart={cart} setCart={setCart} />} />
-                <Route path="/profile" element={<Profile />} />
+                <Route path="/profile" element={<Profile cart={cart} setCart={setCart} />} />
                 <Route path="/contact" element={<Contact />} />
             </Route>
 

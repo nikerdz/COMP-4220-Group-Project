@@ -5,7 +5,29 @@ import ProfileContent from "../components/ProfileContent";
 
 type Section = "info" | "orders" | "wishlist";
 
-export default function Profile() {
+interface BookItem {
+    id: string;
+    title: string;
+    author: string;
+    category: string;
+    imageUrl: string;
+    shortDescription: string;
+    description: string;
+    price: number;
+    inStock: number;
+}
+
+interface CartItem {
+    book: BookItem;
+    quantity: number;
+}
+
+interface ProfileProps {
+    cart: CartItem[];
+    setCart: (cart: CartItem[] | ((prev: CartItem[]) => CartItem[])) => void;
+}
+
+export default function Profile({ cart, setCart }: ProfileProps) {
     const [activeSection, setActiveSection] = useState<Section>("info");
 
     return (
@@ -39,7 +61,11 @@ export default function Profile() {
             <div className="h-64 border-l mx-8" />
             <main className="flex-1 flex justify-center">
                 <div className="max-w-xl w-full">
-                    <ProfileContent activeSection={activeSection} />
+                    <ProfileContent
+                        activeSection={activeSection}
+                        cart={cart}
+                        setCart={setCart}
+                    />
                 </div>
             </main>
         </div>
