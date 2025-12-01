@@ -167,25 +167,28 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
                                     {/* Add to cart functionality */}
                                     <div className="mt-auto flex items-center justify-between pt-3">
                                         <div className="text-sm font-bold">${book.price.toFixed(2)}</div>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                addToCart(book);
-                                            }}
-                                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm"
-                                        >
-                                            Add to Cart
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                addToWishlist(book);
-                                            }}
-                                            className="bg-pink-600 hover:bg-pink-700 text-white px-3 py-1 rounded-lg text-sm"
-                                        >
-                                            ♥
-                                        </button>
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    addToCart(book);
+                                                }}
+                                                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm"
+                                            >
+                                                Add to Cart
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    addToWishlist(book);
+                                                }}
+                                                aria-label="Add to wishlist"
+                                                className="bg-pink-600 hover:bg-pink-700 text-white px-3 py-1 rounded-lg text-sm"
+                                            >
+                                                ♥
+                                            </button>
 
+                                        </div>
                                     </div>
                                 </div>
                             </article>
@@ -226,14 +229,26 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
                                 </span>
                             </div>
 
-                            <button
-                                onClick={() => {
-                                    addToCart(selectedBook);
-                                }}
-                                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-                            >
-                                Add to Cart
-                            </button>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        addToCart(selectedBook!);
+                                    }}
+                                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                                >
+                                    Add to Cart
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        addToWishlist(selectedBook!);
+                                    }}
+                                    aria-label="Add to wishlist"
+                                    className="bg-pink-600 hover:bg-pink-700 text-white px-3 py-1 rounded-lg font-medium transition-colors text-xl"
+                                >
+                                    ♥
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
