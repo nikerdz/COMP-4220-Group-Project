@@ -69,7 +69,7 @@ export default function ProfileContent({ activeSection }: ProfileContentProps) {
                     const data = await res.json();
                     setOrders(data);
                 } else if (activeSection === "wishlist") {
-                    const res = await fetch(`/api/test/wishlist/${user.userId}`);
+                    const res = await fetch(`/api/wishlist/${user.userId}`);
                     if (!res.ok) throw new Error("Failed to load wishlist.");
                     const data = await res.json();
                     setWishlist(data);
