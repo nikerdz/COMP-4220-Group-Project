@@ -1,39 +1,31 @@
 import { useEffect, useState } from "react";
-import CategoryTable from "../components/admin/CategoryTable";
-import CategoryAddModal from "../components/admin/CategoryAddModal";
-import CategoryEditModal from "../components/admin/CategoryEditModal";
 import { API_BASE } from "../api";
+import CategoryTable from "../components/admin/CategoryTable";
+import AddCategoryModal from "../components/admin/CategoryAddModal";
+import EditCategoryModal from "../components/admin/CategoryEditModal";
 
 interface Category {
-    categoryId: number;
-    name: string;
+    CategoryID: number;
+    Name: string | null;
+    Description: string | null;
 }
+
 export default function AdminCategories() {
-    const [categories, setCategories] = useState([]);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
 
     const [showAdd, setShowAdd] = useState(false);
     const [editCategory, setEditCategory] = useState<Category | null>(null);
 
-    const reload = () => {
-        return fetch(`${API_BASE}/api/admin/categories`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-            }
-        })
-            .then((res) => {
-                if (!res.ok) throw new Error("Failed to load categories");
-                return res.json();
-            })
-            .then((data) => setCategories(data))
-            .catch((err) => {
-                console.error("Categories load error:", err);
-                setCategories([]);
-            });
+    const loadData = () => {
+        return fetch(`${API_BASE}/api/admin/categories`)
+            .then(res => res.json())
+            .then(data => setCategories(data))
+            .catch(() => setCategories([]));
     };
 
     useEffect(() => {
-        reload().finally(() => setLoading(false));
+        loadData().finally(() => setLoading(false));
     }, []);
 
     return (
@@ -42,7 +34,7 @@ export default function AdminCategories() {
                 <h1 className="text-2xl font-bold">Categories</h1>
                 <button
                     onClick={() => setShowAdd(true)}
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                    className="bg-green-600 text-white px-4 py-2 rounded"
                 >
                     + Add Category
                 </button>
@@ -53,23 +45,20 @@ export default function AdminCategories() {
             ) : (
                 <CategoryTable
                     categories={categories}
-                    reload={reload}
+                    reload={loadData}
                     setEditCategory={setEditCategory}
                 />
             )}
 
             {showAdd && (
-                <CategoryAddModal
-                    onClose={() => setShowAdd(false)}
-                    reload={reload}
-                />
+                <AddCategoryModal onClose={() => setShowAdd(false)} reload={loadData} />
             )}
 
             {editCategory && (
-                <CategoryEditModal
+                <EditCategoryModal
                     category={editCategory}
                     onClose={() => setEditCategory(null)}
-                    reload={reload}
+                    reload={loadData}
                 />
             )}
         </div>

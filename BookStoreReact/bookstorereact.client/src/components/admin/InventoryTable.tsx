@@ -1,25 +1,32 @@
-import { API_BASE } from "../../api";
 import type { Book } from "../../pages/AdminInventory";
+import { API_BASE } from "../../api";
 
-interface InventoryTableProps {
+interface Props {
     books: Book[];
     reload: () => void;
     setEditBook: (b: Book) => void;
 }
 
-export default function InventoryTable({ books, reload, setEditBook }: InventoryTableProps) {
-    const handleDelete = async (isbn: string) => {
+export default function InventoryTable({ books, reload, setEditBook }: Props) {
+    const handleDelete = async (ISBN: string) => {
         if (!confirm("Delete this book?")) return;
 
-        await fetch(`${API_BASE}/api/admin/books/${isbn}`, {
+        const res = await fetch(`${API_BASE}/api/admin/books/${ISBN}`, {
             method: "DELETE",
             headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`
+                "Content-Type": "application/json"
             }
         });
 
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({ error: "Unknown error" }));
+            alert(`Failed to delete: ${err.error}`);
+            return;
+        }
+
         reload();
     };
+
 
     return (
         <table className="w-full bg-white shadow border border-gray-200 rounded">
@@ -36,14 +43,14 @@ export default function InventoryTable({ books, reload, setEditBook }: Inventory
             </thead>
 
             <tbody>
-                {books.map((b) => (
-                    <tr key={b.isbn} className="border-t">
-                        <td className="p-2">{b.isbn}</td>
-                        <td className="p-2">{b.title}</td>
-                        <td className="p-2">{b.author}</td>
-                        <td className="p-2">${b.price}</td>
-                        <td className="p-2">{b.inStock}</td>
-                        <td className="p-2">{b.supplierName ?? "N/A"}</td>
+                {books.map(b => (
+                    <tr key={b.ISBN} className="border-t">
+                        <td className="p-2">{b.ISBN}</td>
+                        <td className="p-2">{b.Title}</td>
+                        <td className="p-2">{b.Author}</td>
+                        <td className="p-2">${b.Price}</td>
+                        <td className="p-2">{b.InStock}</td>
+                        <td className="p-2">{b.SupplierName ?? "N/A"}</td>
 
                         <td className="p-2 flex gap-2">
                             <button
@@ -54,11 +61,12 @@ export default function InventoryTable({ books, reload, setEditBook }: Inventory
                             </button>
 
                             <button
-                                onClick={() => handleDelete(b.isbn)}
+                                onClick={() => handleDelete(b.ISBN)}
                                 className="px-3 py-1 bg-red-600 text-white rounded"
                             >
                                 Delete
                             </button>
+
                         </td>
                     </tr>
                 ))}

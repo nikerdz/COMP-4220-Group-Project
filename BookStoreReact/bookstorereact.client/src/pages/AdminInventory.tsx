@@ -1,22 +1,21 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import InventoryTable from "../components/admin/InventoryTable";
 import AddBookModal from "../components/admin/AddBookModal";
 import EditBookModal from "../components/admin/EditBookModal";
 import { API_BASE } from "../api";
 
-// FULL BOOK MODEL USED ACROSS ENTIRE ADMIN SYSTEM
 export interface Book {
-    isbn: string;
-    categoryId: number;
-    supplierId?: number | null;
-    title: string;
-    author: string;
-    price: number;
-    year?: string | null;
-    edition: string;
-    publisher?: string | null;
-    inStock: number;
-    supplierName?: string | null;
+    ISBN: string;
+    CategoryID: number;
+    SupplierId: number | null;
+    Title: string;
+    Author: string;
+    Price: number;
+    Year: string;
+    Edition: string;
+    Publisher: string;
+    InStock: number;
+    SupplierName?: string | null;
 }
 
 export default function AdminInventory() {
@@ -26,21 +25,14 @@ export default function AdminInventory() {
     const [showAdd, setShowAdd] = useState(false);
     const [editBook, setEditBook] = useState<Book | null>(null);
 
-    const reload = () => {
-        return fetch(`${API_BASE}/api/admin/books`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`
-            }
-        })
-            .then(res => {
-                if (!res.ok) throw new Error("Failed to load books");
-                return res.json();
-            })
-            .then(data => setBooks(data))
-            .catch(err => {
-                console.error("API Error (books):", err);
-                setBooks([]);
-            });
+    const reload = async () => {
+        try {
+            const res = await fetch(`${API_BASE}/api/admin/books`);
+            const data = await res.json();
+            setBooks(data);
+        } catch (err) {
+            console.error("Failed to load books:", err);
+        }
     };
 
     useEffect(() => {

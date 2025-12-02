@@ -1,33 +1,35 @@
 import { useEffect, useState } from "react";
-import OrdersTable from "../components/admin/OrdersTable";
-import OrderItemsModal from "../components/admin/OrderItemsModal";
 import { API_BASE } from "../api";
+import OrderTable from "../components/admin/OrdersTable";
+import OrderDetailsModal from "../components/admin/OrderItemsModal";
 
 export interface Order {
-    orderId: number;
-    userId: number;
-    userName: string;
+    orderID: number;
+    userID: number;
     orderDate: string;
     totalAmount: number;
+    subtotalAmount: number;
+    taxAmount: number;
+    deliveryFee: number;
     status: string;
+    shippingAddress: string | null;
+    paymentMethod: string | null;
+    email: string | null;
 }
 
 export default function AdminOrders() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedOrder, setSelectedOrder] = useState<number | null>(null);
 
-    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-
-    const reload = async () => {
-        const res = await fetch(`${API_BASE}/api/admin/orders`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-        });
-        const data = await res.json();
-        setOrders(data);
-    };
+    const loadData = () =>
+        fetch(`${API_BASE}/api/admin/orders`)
+            .then((res) => res.json())
+            .then((data) => setOrders(data))
+            .catch(() => setOrders([]));
 
     useEffect(() => {
-        reload().finally(() => setLoading(false));
+        loadData().finally(() => setLoading(false));
     }, []);
 
     return (
@@ -37,16 +39,16 @@ export default function AdminOrders() {
             {loading ? (
                 <p>Loading orders...</p>
             ) : (
-                <OrdersTable
+                <OrderTable
                     orders={orders}
-                    reload={reload}
+                    reload={loadData}
                     setSelectedOrder={setSelectedOrder}
                 />
             )}
 
-            {selectedOrder && (
-                <OrderItemsModal
-                    order={selectedOrder}
+            {selectedOrder !== null && (
+                <OrderDetailsModal
+                    orderId={selectedOrder}
                     onClose={() => setSelectedOrder(null)}
                 />
             )}

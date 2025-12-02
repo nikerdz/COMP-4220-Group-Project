@@ -1,18 +1,37 @@
-namespace BookStoreReact.Server.Models
+using System.Text.Json.Serialization;
 
+public class BookModel
 {
-    public class BookModel
-    {
-        public string ISBN { get; set; }
-        public int CategoryID { get; set; }
-        public int? SupplierId { get; set; }
-        public string Title { get; set; }
-        public string Author { get; set; }
-        public decimal Price { get; set; }
-        public string? Year { get; set; }
-        public string Edition { get; set; }
-        public string? Publisher { get; set; }
-        public int InStock { get; set; }
-        public string? SupplierName { get; set; } // computed
-    }
+    [JsonPropertyName("ISBN")]
+    public string ISBN { get; set; }
+
+    [JsonPropertyName("CategoryID")]
+    public int CategoryID { get; set; }
+
+    [JsonPropertyName("SupplierId")]
+    public int? SupplierId { get; set; }
+
+    [JsonPropertyName("Title")]
+    public string Title { get; set; }
+
+    [JsonPropertyName("Author")]
+    public string Author { get; set; }
+
+    [JsonPropertyName("Price")]
+    public decimal Price { get; set; }
+
+    [JsonPropertyName("Year")]
+    public string Year { get; set; }
+
+    [JsonPropertyName("Edition")]
+    public string Edition { get; set; }
+
+    [JsonPropertyName("Publisher")]
+    public string Publisher { get; set; }
+
+    [JsonPropertyName("InStock")]
+    public int InStock { get; set; }
+
+    [JsonPropertyName("SupplierName")]
+    public string? SupplierName { get; set; }
 }

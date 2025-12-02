@@ -3,13 +3,13 @@ import { API_BASE } from "../../api";
 import type { Book } from "../../pages/AdminInventory";
 
 interface Category {
-    categoryId: number;
-    name: string;
+    CategoryID: number;
+    Name: string;
 }
 
 interface Supplier {
-    supplierId: number;
-    name: string;
+    SupplierId: number;
+    Name: string;
 }
 
 interface EditBookModalProps {
@@ -22,11 +22,17 @@ export default function EditBookModal({ book, onClose, reload }: EditBookModalPr
     const [categories, setCategories] = useState<Category[]>([]);
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
 
-    const [form, setForm] = useState<Book>({
-        ...book,
-        year: book.year ?? "",
-        publisher: book.publisher ?? "",
-        supplierId: book.supplierId ?? null
+    const [form, setForm] = useState({
+        ISBN: book.ISBN,
+        CategoryID: String(book.CategoryID),
+        SupplierId: book.SupplierId ? String(book.SupplierId) : "",
+        Title: book.Title ?? "",
+        Author: book.Author ?? "",
+        Price: String(book.Price),
+        Year: book.Year ?? "",
+        Edition: book.Edition ?? "",
+        Publisher: book.Publisher ?? "",
+        InStock: String(book.InStock),
     });
 
     useEffect(() => {
@@ -46,27 +52,44 @@ export default function EditBookModal({ book, onClose, reload }: EditBookModalPr
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-
-        setForm(prev => ({
-            ...prev,
-            [name]:
-                ["price", "inStock", "categoryId", "supplierId"].includes(name)
-                    ? value === "" ? null : Number(value)
-                    : value
-        }));
+        setForm(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSave = async () => {
-        const res = await fetch(`${API_BASE}/api/admin/books/${book.isbn}`, {
+        // VALIDATION
+        if (form.ISBN.length !== 10) return alert("ISBN must be exactly 10 characters.");
+        if (!form.CategoryID) return alert("Category is required.");
+        if (form.Year.length !== 4) return alert("Year must be exactly 4 characters.");
+        if (form.Edition.length !== 2) return alert("Edition must be exactly 2 characters.");
+
+        const payload = {
+            ISBN: form.ISBN,
+            CategoryID: parseInt(form.CategoryID),
+            SupplierId: form.SupplierId ? parseInt(form.SupplierId) : null,
+            Title: form.Title,
+            Author: form.Author,
+            Price: parseFloat(form.Price),
+            Year: form.Year,
+            Edition: form.Edition,
+            Publisher: form.Publisher,
+            InStock: parseInt(form.InStock)
+        };
+
+        console.log("Sending update payload:", payload);
+
+        const res = await fetch(`${API_BASE}/api/admin/books/${book.ISBN}`, {
             method: "PUT",
             headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("token")}`
+                "Content-Type": "application/json"
             },
-            body: JSON.stringify(form)
+            body: JSON.stringify(payload),
         });
 
-        if (!res.ok) return alert("Failed to update book.");
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({ error: "Unknown error" }));
+            alert(`Failed to update: ${err.error}`);
+            return;
+        }
 
         reload();
         onClose();
@@ -77,46 +100,66 @@ export default function EditBookModal({ book, onClose, reload }: EditBookModalPr
             <div className="bg-white p-6 w-96 rounded shadow">
                 <h2 className="text-xl font-bold mb-4">Edit Book</h2>
 
-                <input name="isbn" readOnly className="input mb-2 w-full" value={form.isbn} />
+                <input
+                    name="ISBN"
+                    className="input mb-2 w-full"
+                    placeholder="ISBN (10 chars)"
+                    value={form.ISBN}
+                    onChange={handleChange}
+                />
 
                 <select
-                    name="categoryId"
+                    name="CategoryID"
                     className="input mb-2 w-full"
-                    value={form.categoryId}
+                    value={form.CategoryID}
                     onChange={handleChange}
                 >
-                    {categories.map((c) => (
-                        <option key={c.categoryId} value={c.categoryId}>
-                            {c.name}
+                    <option value="">Select Category</option>
+                    {categories.map(c => (
+                        <option key={c.CategoryID} value={c.CategoryID}>
+                            {c.Name}
                         </option>
                     ))}
                 </select>
 
                 <select
-                    name="supplierId"
+                    name="SupplierId"
                     className="input mb-2 w-full"
-                    value={form.supplierId ?? ""}
+                    value={form.SupplierId}
                     onChange={handleChange}
                 >
                     <option value="">Select Supplier</option>
-                    {suppliers.map((s) => (
-                        <option key={s.supplierId} value={s.supplierId}>
-                            {s.name}
+                    {suppliers.map(s => (
+                        <option key={s.SupplierId} value={s.SupplierId}>
+                            {s.Name}
                         </option>
                     ))}
                 </select>
 
-                <input name="title" className="input mb-2 w-full" value={form.title} onChange={handleChange} />
-                <input name="author" className="input mb-2 w-full" value={form.author} onChange={handleChange} />
-                <input name="price" type="number" className="input mb-2 w-full" value={form.price} onChange={handleChange} />
-                <input name="year" className="input mb-2 w-full" value={form.year ?? ""} onChange={handleChange} />
-                <input name="edition" className="input mb-2 w-full" value={form.edition} onChange={handleChange} />
-                <input name="publisher" className="input mb-2 w-full" value={form.publisher ?? ""} onChange={handleChange} />
-                <input name="inStock" type="number" className="input mb-4 w-full" value={form.inStock} onChange={handleChange} />
+                <input name="Title" className="input mb-2 w-full"
+                    placeholder="Title" value={form.Title} onChange={handleChange} />
+
+                <input name="Author" className="input mb-2 w-full"
+                    placeholder="Author" value={form.Author} onChange={handleChange} />
+
+                <input name="Price" type="number" className="input mb-2 w-full"
+                    placeholder="Price" value={form.Price} onChange={handleChange} />
+
+                <input name="Year" className="input mb-2 w-full"
+                    placeholder="Year (4 chars)" value={form.Year} onChange={handleChange} />
+
+                <input name="Edition" className="input mb-2 w-full"
+                    placeholder="Edition (2 chars)" value={form.Edition} onChange={handleChange} />
+
+                <input name="Publisher" className="input mb-2 w-full"
+                    placeholder="Publisher" value={form.Publisher} onChange={handleChange} />
+
+                <input name="InStock" type="number" className="input mb-4 w-full"
+                    placeholder="In Stock" value={form.InStock} onChange={handleChange} />
 
                 <div className="flex justify-end gap-2">
                     <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">Cancel</button>
-                    <button onClick={handleSave} className="px-4 py-2 bg-green-600 text-white rounded">Update</button>
+                    <button onClick={handleSave} className="px-4 py-2 bg-green-600 text-white rounded">Save</button>
                 </div>
             </div>
         </div>

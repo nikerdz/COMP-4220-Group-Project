@@ -1,24 +1,32 @@
 ﻿import { API_BASE } from "../../api";
-import type { User } from "../../User";
 
+interface UserAdmin {
+    UserID: number;
+    UserName: string;
+    FullName: string | null;
+    Email: string | null;
+    Type: string;
+    Manager: boolean;
+}
 
 interface UserTableProps {
-    users: User[];
+    users: UserAdmin[];
     reload: () => void;
-    setEditUser: (u: User) => void;
+    setEditUser: (u: UserAdmin | null) => void;
 }
 
 export default function UserTable({ users, reload, setEditUser }: UserTableProps) {
-
     const handleDelete = async (id: number) => {
         if (!confirm("Delete this user?")) return;
 
-        await fetch(`${API_BASE}/api/admin/users/${id}`, {
-            method: "DELETE",
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`
-            }
+        const res = await fetch(`${API_BASE}/api/admin/users/${id}`, {
+            method: "DELETE"
         });
+
+        if (!res.ok) {
+            alert("Failed to delete user.");
+            return;
+        }
 
         reload();
     };
@@ -29,23 +37,23 @@ export default function UserTable({ users, reload, setEditUser }: UserTableProps
                 <tr>
                     <th className="p-2 text-left">ID</th>
                     <th className="p-2 text-left">Username</th>
-                    <th className="p-2 text-left">Type</th>
-                    <th className="p-2 text-left">Manager</th>
                     <th className="p-2 text-left">Full Name</th>
                     <th className="p-2 text-left">Email</th>
+                    <th className="p-2 text-left">Type</th>
+                    <th className="p-2 text-left">Manager</th>
                     <th className="p-2 text-left">Actions</th>
                 </tr>
             </thead>
 
             <tbody>
                 {users.map((u) => (
-                    <tr key={u.userId} className="border-t">
-                        <td className="p-2">{u.userId}</td>
-                        <td className="p-2">{u.userName}</td>
-                        <td className="p-2">{u.type}</td>
-                        <td className="p-2">{u.manager ? "✔" : "✖"}</td>
-                        <td className="p-2">{u.fullName || "—"}</td>
-                        <td className="p-2">{u.email || "—"}</td>
+                    <tr key={u.UserID} className="border-t">
+                        <td className="p-2">{u.UserID}</td>
+                        <td className="p-2">{u.UserName}</td>
+                        <td className="p-2">{u.FullName ?? "—"}</td>
+                        <td className="p-2">{u.Email ?? "—"}</td>
+                        <td className="p-2">{u.Type}</td>
+                        <td className="p-2">{u.Manager ? "Yes" : "No"}</td>
 
                         <td className="p-2 flex gap-2">
                             <button
@@ -56,7 +64,7 @@ export default function UserTable({ users, reload, setEditUser }: UserTableProps
                             </button>
 
                             <button
-                                onClick={() => handleDelete(u.userId)}
+                                onClick={() => handleDelete(u.UserID)}
                                 className="px-3 py-1 bg-red-600 text-white rounded"
                             >
                                 Delete

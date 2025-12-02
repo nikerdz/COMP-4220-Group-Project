@@ -1,62 +1,61 @@
-import { useState } from "react";
+﻿import { useState } from "react";
+import type { Offer } from "../../pages/AdminOffers";
 import { API_BASE } from "../../api";
 
-interface Offer {
-    offerId: number;
-    code: string;
-    description: string | null;
-    discountPercent: number;
-    active: boolean;
-    expiryDate: string | null;
-}
-
-interface OfferEditModalProps {
+interface EditProps {
     offer: Offer;
     onClose: () => void;
     reload: () => void;
 }
 
-export default function OfferEditModal({ offer, onClose, reload }: OfferEditModalProps) {
+export default function OfferEditModal({ offer, onClose, reload }: EditProps) {
     const [form, setForm] = useState({
-        code: offer.code,
-        description: offer.description ?? "",
-        discountPercent: offer.discountPercent.toString(),
-        active: offer.active,
-        expiryDate: offer.expiryDate ?? ""
+        CouponID: offer.CouponID,
+        Code: offer.Code,
+        Description: offer.Description ?? "",
+        DiscountRate: offer.DiscountRate.toString(),
+        UsageLimit: offer.UsageLimit?.toString() ?? "",
+        StartDate: offer.StartDate ?? "",
+        EndDate: offer.EndDate ?? "",
+        IsActive: offer.IsActive
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value, type, checked } = e.target;
-        setForm(prev => ({
-            ...prev,
-            [name]: type === "checkbox" ? checked : value
-        }));
+        const { name, value, type } = e.target;
+
+        if (type === "checkbox") {
+            setForm(prev => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
+            return;
+        }
+
+        setForm(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSave = async () => {
         const payload = {
-            code: form.code,
-            description: form.description,
-            discountPercent: Number(form.discountPercent),
-            active: form.active,
-            expiryDate: form.expiryDate || null
+            CouponID: form.CouponID,
+            Code: form.Code,
+            Description: form.Description || null,
+            DiscountRate: Number(form.DiscountRate),
+            UsageLimit: form.UsageLimit === "" ? null : Number(form.UsageLimit),
+            StartDate: form.StartDate === "" ? null : form.StartDate,
+            EndDate: form.EndDate === "" ? null : form.EndDate,
+            IsActive: form.IsActive
         };
 
-        const res = await fetch(`${API_BASE}/api/admin/offers/${offer.offerId}`, {
+        const res = await fetch(`${API_BASE}/api/admin/offers/${form.CouponID}`, {
             method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("token")}`
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
 
-        if (res.ok) {
-            reload();
-            onClose();
-        } else {
-            alert("Failed to update offer.");
+        if (!res.ok) {
+            alert("Failed to update offer");
+            return;
         }
+
+        reload();
+        onClose();
     };
 
     return (
@@ -64,54 +63,35 @@ export default function OfferEditModal({ offer, onClose, reload }: OfferEditModa
             <div className="bg-white p-6 w-96 rounded shadow">
                 <h2 className="text-xl font-bold mb-4">Edit Offer</h2>
 
-                <input
-                    name="code"
-                    className="input mb-2 w-full"
-                    value={form.code}
-                    onChange={handleChange}
-                />
+                <input className="input mb-2 w-full" disabled value={form.CouponID} />
 
-                <input
-                    name="description"
-                    className="input mb-2 w-full"
-                    value={form.description}
-                    onChange={handleChange}
-                />
+                <input name="Code" className="input mb-2 w-full" value={form.Code}
+                    onChange={handleChange} />
 
-                <input
-                    name="discountPercent"
-                    type="number"
-                    className="input mb-2 w-full"
-                    value={form.discountPercent}
-                    onChange={handleChange}
-                />
+                <input name="Description" className="input mb-2 w-full"
+                    value={form.Description} onChange={handleChange} />
 
-                <label className="flex items-center gap-2 mb-2">
-                    <input
-                        type="checkbox"
-                        name="active"
-                        checked={form.active}
-                        onChange={handleChange}
-                    />
-                    <span>Active</span>
+                <input name="DiscountRate" type="number" className="input mb-2 w-full"
+                    value={form.DiscountRate} onChange={handleChange} />
+
+                <input name="UsageLimit" type="number" className="input mb-2 w-full"
+                    value={form.UsageLimit} onChange={handleChange} />
+
+                <input name="StartDate" type="date" className="input mb-2 w-full"
+                    value={form.StartDate?.substring(0, 10) ?? ""} onChange={handleChange} />
+
+                <input name="EndDate" type="date" className="input mb-2 w-full"
+                    value={form.EndDate?.substring(0, 10) ?? ""} onChange={handleChange} />
+
+                <label className="flex items-center gap-2 mb-4">
+                    <input type="checkbox" name="IsActive"
+                        checked={form.IsActive} onChange={handleChange} />
+                    Active
                 </label>
 
-                <input
-                    name="expiryDate"
-                    type="date"
-                    className="input mb-4 w-full"
-                    value={form.expiryDate}
-                    onChange={handleChange}
-                />
-
                 <div className="flex justify-end gap-2">
-                    <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">
-                        Cancel
-                    </button>
-
-                    <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded">
-                        Update
-                    </button>
+                    <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">Cancel</button>
+                    <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded">Save</button>
                 </div>
             </div>
         </div>

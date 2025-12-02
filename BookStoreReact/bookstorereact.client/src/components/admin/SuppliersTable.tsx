@@ -1,31 +1,31 @@
+import React from "react";
 import { API_BASE } from "../../api";
 
 interface Supplier {
-    supplierId: number;
-    name: string;
+    SupplierId: number;
+    Name: string;
 }
 
-interface SuppliersTableProps {
+interface Props {
     suppliers: Supplier[];
     reload: () => void;
-    setEditSupplier: (supplier: Supplier) => void;
+    setEditSupplier: (s: Supplier | null) => void;
 }
 
-export default function SuppliersTable({
-    suppliers,
-    reload,
-    setEditSupplier
-}: SuppliersTableProps) {
+export default function SuppliersTable({ suppliers, reload, setEditSupplier }: Props) {
 
     const handleDelete = async (id: number) => {
         if (!confirm("Delete this supplier?")) return;
 
-        await fetch(`${API_BASE}/api/admin/suppliers/${id}`, {
+        const res = await fetch(`${API_BASE}/api/admin/suppliers/${id}`, {
             method: "DELETE",
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`
-            }
         });
+
+        if (!res.ok) {
+            const msg = await res.text();
+            alert("Failed to delete supplier: " + msg);
+            return;
+        }
 
         reload();
     };
@@ -42,9 +42,9 @@ export default function SuppliersTable({
 
             <tbody>
                 {suppliers.map((s) => (
-                    <tr key={s.supplierId} className="border-t">
-                        <td className="p-2">{s.supplierId}</td>
-                        <td className="p-2">{s.name}</td>
+                    <tr key={s.SupplierId} className="border-t">
+                        <td className="p-2">{s.SupplierId}</td>
+                        <td className="p-2">{s.Name}</td>
 
                         <td className="p-2 flex gap-2">
                             <button
@@ -55,7 +55,7 @@ export default function SuppliersTable({
                             </button>
 
                             <button
-                                onClick={() => handleDelete(s.supplierId)}
+                                onClick={() => handleDelete(s.SupplierId)}
                                 className="px-3 py-1 bg-red-600 text-white rounded"
                             >
                                 Delete

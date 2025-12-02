@@ -1,31 +1,32 @@
 import { API_BASE } from "../../api";
 
 interface Category {
-    categoryId: number;
-    name: string;
+    CategoryID: number;
+    Name: string | null;
+    Description: string | null;
 }
 
 interface CategoryTableProps {
     categories: Category[];
     reload: () => void;
-    setEditCategory: (c: Category | null) => void; // FIXED TYPE
+    setEditCategory: (c: Category | null) => void;
 }
 
-export default function CategoryTable({
-    categories,
-    reload,
-    setEditCategory
-}: CategoryTableProps) {
+export default function CategoryTable({ categories, reload, setEditCategory }: CategoryTableProps) {
 
     const handleDelete = async (id: number) => {
         if (!confirm("Delete this category?")) return;
 
-        await fetch(`${API_BASE}/api/admin/categories/${id}`, {   // FIXED URL
+        const res = await fetch(`${API_BASE}/api/admin/categories/${id}`, {
             method: "DELETE",
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}` // optional
-            }
+            headers: { "Content-Type": "application/json" }
         });
+
+        if (!res.ok) {
+            const msg = await res.text();
+            alert("Failed to delete category: " + msg);
+            return;
+        }
 
         reload();
     };
@@ -36,15 +37,17 @@ export default function CategoryTable({
                 <tr>
                     <th className="p-2 text-left">ID</th>
                     <th className="p-2 text-left">Name</th>
+                    <th className="p-2 text-left">Description</th>
                     <th className="p-2 text-left">Actions</th>
                 </tr>
             </thead>
 
             <tbody>
                 {categories.map((c) => (
-                    <tr key={c.categoryId} className="border-t">
-                        <td className="p-2">{c.categoryId}</td>
-                        <td className="p-2">{c.name}</td>
+                    <tr key={c.CategoryID} className="border-t">
+                        <td className="p-2">{c.CategoryID}</td>
+                        <td className="p-2">{c.Name}</td>
+                        <td className="p-2">{c.Description ?? "—"}</td>
 
                         <td className="p-2 flex gap-2">
                             <button
@@ -55,7 +58,7 @@ export default function CategoryTable({
                             </button>
 
                             <button
-                                onClick={() => handleDelete(c.categoryId)}
+                                onClick={() => handleDelete(c.CategoryID)}
                                 className="px-3 py-1 bg-red-600 text-white rounded"
                             >
                                 Delete
