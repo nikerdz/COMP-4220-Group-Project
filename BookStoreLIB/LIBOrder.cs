@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace BookStoreLIB
@@ -6,7 +6,7 @@ namespace BookStoreLIB
     /// <summary>
     /// Represents a customer order in the bookstore system
     /// </summary>
-    public class Order
+    public class LIBOrder
     {
         public int OrderID { get; set; }
         public int UserID { get; set; }
@@ -21,9 +21,9 @@ namespace BookStoreLIB
         public string Email { get; set; }
 
         // Navigation property - not stored in DB but useful for object model
-        public List<OrderItem> Items { get; set; } = new List<OrderItem>();
+        public List<LIBOrderItem> Items { get; set; } = new List<LIBOrderItem>();
 
-        public Order()
+        public LIBOrder()
         {
             OrderDate = DateTime.UtcNow;
         }

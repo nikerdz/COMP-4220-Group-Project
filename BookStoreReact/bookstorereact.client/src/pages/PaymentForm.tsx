@@ -46,7 +46,46 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     const [email, setEmail] = useState("");
     const [error, setError] = useState<string | null>(null);
 
-    const handlePayNow = () => {
+    async function submitOrderToBackend() {
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+        const orderPayload = {
+            userId: user.userId,
+            email: email,
+            shippingAddress: "N/A",
+            paymentMethod: "Card",
+            deliveryFee,
+            taxRate: 0.13,
+            couponCode: "",
+
+            status: cart.some(item => item.book.inStock === 0)
+                ? "PreOrder"
+                : "Pending",
+
+            items: cart.map(item => ({
+                ISBN: item.book.id,
+                Title: item.book.title,
+                Author: item.book.author,
+                Price: item.book.price,
+                Quantity: item.quantity
+            }))
+        };
+
+        const res = await fetch("/api/orders/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(orderPayload)
+        });
+
+        if (!res.ok) {
+            throw new Error("Order creation failed.");
+        }
+
+        return await res.json();
+    }
+
+
+    const handlePayNow = async () => {
         // clear previous error
         setError(null);
 
@@ -70,10 +109,20 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
         );
 
         if (!confirmed) return;
+
+        // 3) Create order in backend
+        try {
+            await submitOrderToBackend();
+        } catch (err) {
+            setError("Failed to place order. Please try again.");
+            return;
+        }
+
         window.alert(
             `Payment successful! You paid $${total.toFixed(2)}.\nYour order has been placed.`
         );
-        // 3) success callback – test expects this when fields are valid & confirmed
+
+        // THEN clear & close cart
         onSuccess();
     };
 
