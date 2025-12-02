@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -8,7 +8,7 @@ namespace BookStoreLIB
     /// <summary>
     /// Data Access Layer for Order operations
     /// </summary>
-    public class DALOrder
+    public class LIBDALOrder
     {
         // Connection resolution using same pattern as DALUserInfo
         private static string ResolveConn()
@@ -39,7 +39,7 @@ namespace BookStoreLIB
         /// Creates a new order with its items in a transaction
         /// </summary>
         /// <returns>The new OrderID</returns>
-        public int CreateOrder(Order order, List<OrderItem> items)
+        public int CreateOrder(LIBOrder order, List<LIBOrderItem> items)
         {
             if (order == null)
                 throw new ArgumentNullException(nameof(order));
@@ -75,11 +75,11 @@ namespace BookStoreLIB
                             cmd.Parameters.Add("@TaxAmount", SqlDbType.Decimal).Value = order.TaxAmount;
                             cmd.Parameters.Add("@DeliveryFee", SqlDbType.Decimal).Value = order.DeliveryFee;
                             cmd.Parameters.Add("@Status", SqlDbType.VarChar, 20).Value = order.Status ?? "Pending";
-                            cmd.Parameters.Add("@ShippingAddress", SqlDbType.NVarChar, 200).Value = 
+                            cmd.Parameters.Add("@ShippingAddress", SqlDbType.NVarChar, 200).Value =
                                 string.IsNullOrWhiteSpace(order.ShippingAddress) ? (object)DBNull.Value : order.ShippingAddress;
-                            cmd.Parameters.Add("@PaymentMethod", SqlDbType.VarChar, 20).Value = 
+                            cmd.Parameters.Add("@PaymentMethod", SqlDbType.VarChar, 20).Value =
                                 string.IsNullOrWhiteSpace(order.PaymentMethod) ? (object)DBNull.Value : order.PaymentMethod;
-                            cmd.Parameters.Add("@Email", SqlDbType.VarChar, 100).Value = 
+                            cmd.Parameters.Add("@Email", SqlDbType.VarChar, 100).Value =
                                 string.IsNullOrWhiteSpace(order.Email) ? (object)DBNull.Value : order.Email;
 
                             orderId = (int)cmd.ExecuteScalar();
@@ -98,9 +98,9 @@ namespace BookStoreLIB
                             {
                                 cmd.Parameters.Add("@OrderID", SqlDbType.Int).Value = orderId;
                                 cmd.Parameters.Add("@ISBN", SqlDbType.VarChar, 20).Value = item.ISBN ?? "";
-                                cmd.Parameters.Add("@Title", SqlDbType.NVarChar, 200).Value = 
+                                cmd.Parameters.Add("@Title", SqlDbType.NVarChar, 200).Value =
                                     string.IsNullOrWhiteSpace(item.Title) ? (object)DBNull.Value : item.Title;
-                                cmd.Parameters.Add("@Author", SqlDbType.NVarChar, 100).Value = 
+                                cmd.Parameters.Add("@Author", SqlDbType.NVarChar, 100).Value =
                                     string.IsNullOrWhiteSpace(item.Author) ? (object)DBNull.Value : item.Author;
                                 cmd.Parameters.Add("@Price", SqlDbType.Decimal).Value = item.Price;
                                 cmd.Parameters.Add("@Quantity", SqlDbType.Int).Value = item.Quantity;
@@ -125,9 +125,9 @@ namespace BookStoreLIB
         /// <summary>
         /// Retrieves all orders for a specific user
         /// </summary>
-        public List<Order> GetOrdersByUserId(int userId)
+        public List<LIBOrder> GetOrdersByUserId(int userId)
         {
-            var orders = new List<Order>();
+            var orders = new List<LIBOrder>();
 
             using (var conn = new SqlConnection(ResolveConn()))
             {
@@ -152,7 +152,7 @@ namespace BookStoreLIB
                     {
                         while (reader.Read())
                         {
-                            var order = new Order
+                            var order = new LIBOrder
                             {
                                 OrderID = reader.GetInt32(0),
                                 UserID = reader.GetInt32(1),
@@ -179,9 +179,9 @@ namespace BookStoreLIB
         /// <summary>
         /// Retrieves a specific order with all its items
         /// </summary>
-        public Order GetOrderDetails(int orderId)
+        public LIBOrder GetOrderDetails(int orderId)
         {
-            Order order = null;
+            LIBOrder order = null;
 
             using (var conn = new SqlConnection(ResolveConn()))
             {
@@ -202,7 +202,7 @@ namespace BookStoreLIB
                     {
                         if (reader.Read())
                         {
-                            order = new Order
+                            order = new LIBOrder
                             {
                                 OrderID = reader.GetInt32(0),
                                 UserID = reader.GetInt32(1),
@@ -237,7 +237,7 @@ namespace BookStoreLIB
                     {
                         while (reader.Read())
                         {
-                            var item = new OrderItem
+                            var item = new LIBOrderItem
                             {
                                 OrderItemID = reader.GetInt32(0),
                                 OrderID = reader.GetInt32(1),

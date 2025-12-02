@@ -86,7 +86,9 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
                 const data = (await res.json()) as BackendBook[];
                 const mapped = data.map(mapBackendToBookItem);
 
-                setBooks(mapped);
+                const inStockOnly = mapped.filter(book => book.inStock > 0);
+
+                setBooks(inStockOnly);
             } catch (err) {
                 // eslint-disable-next-line no-console
                 console.error(err);

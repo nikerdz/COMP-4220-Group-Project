@@ -6,7 +6,7 @@ namespace BookStoreLIB.Tests
     [TestClass]
     public class PreOrderTests
     {
-        
+
         private Book MakeBook(string isbn, int stock)
         {
             return new Book

@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 
 namespace BookStoreLIB
 {
     /// <summary>
     /// Represents an individual item (book) within an order
     /// </summary>
-    public class OrderItem
+    public class LIBOrderItem
     {
         public int OrderItemID { get; set; }
         public int OrderID { get; set; }

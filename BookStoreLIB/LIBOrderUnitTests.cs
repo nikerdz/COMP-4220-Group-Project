@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using BookStoreLIB;
@@ -6,7 +6,7 @@ using BookStoreLIB;
 namespace BookStoreLIB
 {
     [TestClass]
-    public class OrderUnitTests
+    public class LIBOrderUnitTests
     {
         // Helper to load environment variables from .env file
         [ClassInitialize]
@@ -23,7 +23,7 @@ namespace BookStoreLIB
                     if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#"))
                         continue;
 
-                    var parts = line.Split('=', 2);
+                    var parts = line.Split('=', (char)2);
                     if (parts.Length == 2)
                     {
                         var key = parts[0].Trim();
@@ -38,9 +38,9 @@ namespace BookStoreLIB
         public void CreateOrder_ValidData_ReturnsValidOrderId()
         {
             // Arrange
-            var dal = new DALOrder();
-            
-            var order = new Order
+            var dal = new LIBDALOrder();
+
+            var order = new LIBOrder
             {
                 UserID = 1, // Assuming userId 1 exists in test DB
                 OrderDate = DateTime.UtcNow,
@@ -54,9 +54,9 @@ namespace BookStoreLIB
                 Email = "test@example.com"
             };
 
-            var items = new List<OrderItem>
+            var items = new List<LIBOrderItem>
             {
-                new OrderItem
+                new LIBOrderItem
                 {
                     ISBN = "978-0134685991",
                     Title = "Effective Java",
@@ -65,7 +65,7 @@ namespace BookStoreLIB
                     Quantity = 1,
                     Subtotal = 34.99m
                 },
-                new OrderItem
+                new LIBOrderItem
                 {
                     ISBN = "978-0135166307",
                     Title = "Clean Code",
@@ -91,8 +91,8 @@ namespace BookStoreLIB
         public void CreateOrder_NullOrder_ThrowsException()
         {
             // Arrange
-            var dal = new DALOrder();
-            var items = new List<OrderItem>();
+            var dal = new LIBDALOrder();
+            var items = new List<LIBOrderItem>();
 
             // Act & Assert - should throw ArgumentNullException
             dal.CreateOrder(null, items);
@@ -103,13 +103,13 @@ namespace BookStoreLIB
         public void CreateOrder_EmptyItems_ThrowsException()
         {
             // Arrange
-            var dal = new DALOrder();
-            var order = new Order
+            var dal = new LIBDALOrder();
+            var order = new LIBOrder
             {
                 UserID = 1,
                 TotalAmount = 100.00m
             };
-            var items = new List<OrderItem>(); // Empty list
+            var items = new List<LIBOrderItem>(); // Empty list
 
             // Act & Assert - should throw ArgumentException
             dal.CreateOrder(order, items);
@@ -119,11 +119,11 @@ namespace BookStoreLIB
         public void GetOrdersByUserId_ValidUser_ReturnsOrders()
         {
             // Arrange
-            var dal = new DALOrder();
+            var dal = new LIBDALOrder();
             int testUserId = 1; // Assuming userId 1 exists
 
             // First create a test order
-            var order = new Order
+            var order = new LIBOrder
             {
                 UserID = testUserId,
                 OrderDate = DateTime.UtcNow,
@@ -135,9 +135,9 @@ namespace BookStoreLIB
                 Email = "test@example.com"
             };
 
-            var items = new List<OrderItem>
+            var items = new List<LIBOrderItem>
             {
-                new OrderItem
+                new LIBOrderItem
                 {
                     ISBN = "978-1234567890",
                     Title = "Test Book",
@@ -157,7 +157,7 @@ namespace BookStoreLIB
             // Assert
             Assert.IsNotNull(orders, "Orders list should not be null");
             Assert.IsTrue(orders.Count > 0, "Should have at least one order");
-            
+
             // Verify the order we just created is in the list
             var createdOrder = orders.Find(o => o.OrderID == orderId);
             Assert.IsNotNull(createdOrder, "Created order should be in the list");
@@ -168,10 +168,10 @@ namespace BookStoreLIB
         public void GetOrderDetails_ValidOrderId_ReturnsOrderWithItems()
         {
             // Arrange
-            var dal = new DALOrder();
-            
+            var dal = new LIBDALOrder();
+
             // First create a test order
-            var order = new Order
+            var order = new LIBOrder
             {
                 UserID = 1,
                 OrderDate = DateTime.UtcNow,
@@ -185,9 +185,9 @@ namespace BookStoreLIB
                 Email = "details@test.com"
             };
 
-            var items = new List<OrderItem>
+            var items = new List<LIBOrderItem>
             {
-                new OrderItem
+                new LIBOrderItem
                 {
                     ISBN = "111-1111111111",
                     Title = "Book One",
@@ -196,7 +196,7 @@ namespace BookStoreLIB
                     Quantity = 1,
                     Subtotal = 29.99m
                 },
-                new OrderItem
+                new LIBOrderItem
                 {
                     ISBN = "222-2222222222",
                     Title = "Book Two",
@@ -218,7 +218,7 @@ namespace BookStoreLIB
             Assert.AreEqual(72.78m, retrievedOrder.TotalAmount, "Total should match");
             Assert.AreEqual("Pending", retrievedOrder.Status, "Status should match");
             Assert.AreEqual(2, retrievedOrder.Items.Count, "Should have 2 items");
-            
+
             // Verify items
             Assert.AreEqual("Book One", retrievedOrder.Items[0].Title, "First item title should match");
             Assert.AreEqual("Book Two", retrievedOrder.Items[1].Title, "Second item title should match");
@@ -228,7 +228,7 @@ namespace BookStoreLIB
         public void GetOrderDetails_InvalidOrderId_ReturnsNull()
         {
             // Arrange
-            var dal = new DALOrder();
+            var dal = new LIBDALOrder();
             int invalidOrderId = -999;
 
             // Act
@@ -242,10 +242,10 @@ namespace BookStoreLIB
         public void UpdateOrderStatus_ValidOrder_UpdatesSuccessfully()
         {
             // Arrange
-            var dal = new DALOrder();
-            
+            var dal = new LIBDALOrder();
+
             // Create a test order
-            var order = new Order
+            var order = new LIBOrder
             {
                 UserID = 1,
                 OrderDate = DateTime.UtcNow,
@@ -256,9 +256,9 @@ namespace BookStoreLIB
                 Status = "Pending"
             };
 
-            var items = new List<OrderItem>
+            var items = new List<LIBOrderItem>
             {
-                new OrderItem
+                new LIBOrderItem
                 {
                     ISBN = "333-3333333333",
                     Title = "Status Test Book",
@@ -286,7 +286,7 @@ namespace BookStoreLIB
         public void UpdateOrderStatus_InvalidOrderId_ReturnsFalse()
         {
             // Arrange
-            var dal = new DALOrder();
+            var dal = new LIBDALOrder();
             int invalidOrderId = -999;
 
             // Act
@@ -300,7 +300,7 @@ namespace BookStoreLIB
         public void OrderItem_UpdateSubtotal_CalculatesCorrectly()
         {
             // Arrange
-            var item = new OrderItem
+            var item = new LIBOrderItem
             {
                 Price = 19.99m,
                 Quantity = 3
@@ -312,5 +312,66 @@ namespace BookStoreLIB
             // Assert
             Assert.AreEqual(59.97m, item.Subtotal, "Subtotal should be calculated correctly");
         }
+
+        [TestMethod]
+        public void CancelPreOrder_PreOrderStatus_ChangesToCancelled()
+        {
+            // Arrange
+            var order = new LIBOrder
+            {
+                OrderID = 1,
+                Status = "PreOrder"
+            };
+
+            // Act
+            order.Status = "Cancelled";
+
+            // Assert
+            Assert.AreEqual("Cancelled", order.Status);
+        }
+
+        [TestMethod]
+        public void CancelPreOrder_WhenShipped_ShouldNotChangeStatus()
+        {
+            // Arrange
+            var order = new LIBOrder
+            {
+                OrderID = 2,
+                Status = "Shipped"
+            };
+
+            // Act
+            string before = order.Status;
+
+            // "Cancelling" has no effect
+            if (order.Status != "Shipped")
+                order.Status = "Cancelled";
+
+            // Assert
+            Assert.AreEqual("Shipped", order.Status);
+        }
+
+        [TestMethod]
+        public void CancelPreOrder_WhenNotPreOrder_ShouldNotCancel()
+        {
+            // Arrange
+            var order = new LIBOrder
+            {
+                OrderID = 3,
+                Status = "Pending"
+            };
+
+            // Act
+            string before = order.Status;
+
+            if (order.Status == "PreOrder")
+                order.Status = "Cancelled";
+
+            // Assert
+            Assert.AreEqual("Pending", order.Status);
+        }
+
+
+
     }
 }

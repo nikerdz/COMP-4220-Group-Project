@@ -1,7 +1,8 @@
-﻿import BooksSection from "../components/BooksSection";
+﻿import { useEffect, useState } from "react";
+import BooksSection from "../components/BooksSection";
 import Button from "../components/Button";
 import Recommendations from "../components/Recommendations";
-
+import OutOfStock from "../components/OutOfStock";
 
 interface BookItem {
     id: string;
@@ -33,7 +34,7 @@ interface UserData {
 }
 
 export default function Home({ cart, setCart }: HomeProps) {
-    // Get user data from localStorage
+    // Get user data
     const getUserData = (): UserData | null => {
         try {
             const userData = localStorage.getItem("user");
@@ -49,9 +50,35 @@ export default function Home({ cart, setCart }: HomeProps) {
 
     const handleLogout = () => {
         localStorage.removeItem("user");
-        // Use window.location.href for full page reload to clear any state
         window.location.href = "/";
     };
+
+    // -----------------------------
+    // Out-of-stock logic
+    // -----------------------------
+    const [allBooks, setAllBooks] = useState<BookItem[]>([]);
+    const [outOfStockBooks, setOutOfStockBooks] = useState<BookItem[]>([]);
+
+    useEffect(() => {
+        const fetchBooks = async () => {
+            try {
+                // SAME endpoint used by BooksSection — adjust if different
+                const res = await fetch("/api/test/books");
+
+                if (!res.ok) throw new Error("Failed to load books");
+
+                const data = await res.json();
+                setAllBooks(data);
+
+                // Filter for stock == 0
+                setOutOfStockBooks(data.filter((b: BookItem) => b.inStock === 0));
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        fetchBooks();
+    }, []);
 
     return (
         <main className="flex flex-col">
@@ -71,6 +98,7 @@ export default function Home({ cart, setCart }: HomeProps) {
                     <p className="text-lg mb-6 text-gray-200">
                         {user ? "Continue your reading journey" : "Discover your next great read"}
                     </p>
+
                     <div className="flex flex-col gap-3 items-center">
                         {user ? (
                             <>
@@ -92,14 +120,20 @@ export default function Home({ cart, setCart }: HomeProps) {
                 </div>
             </section>
 
-            {/* PASS cart props to BooksSection */}
-            <BooksSection cart={cart} setCart={setCart} />
-
-            {/* Recommendations row (uses same look-and-feel as BooksSection cards) */}
+            {/* Recommendations */}
             <h2 className="text-3xl font-semibold text-gray-700 text-center bg-white w-full py-4">
                 Recommendations
             </h2>
             <Recommendations cart={cart} setCart={setCart} maxItems={4} />
+
+            {/* Book browsing section */}
+            <BooksSection cart={cart} setCart={setCart} />
+
+            {/* Out of Stock */}
+            <h2 className="text-3xl font-semibold text-gray-700 text-center bg-white w-full py-4">
+                Out of Stock
+            </h2>
+            <OutOfStock cart={cart} setCart={setCart} />
         </main>
     );
 }
