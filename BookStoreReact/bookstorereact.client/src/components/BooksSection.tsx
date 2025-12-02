@@ -1,10 +1,12 @@
-﻿import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+﻿
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import {
     mapBackendToBookItem,
     filterBooks,
     type BookItem,
     type BackendBook,
 } from "./booksMapper";
+import BookOverlay from "./BookOverlay";
 
 type CartItem = {
     book: BookItem;
@@ -106,8 +108,8 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
     const filteredBooks = filterBooks(books, search);
 
     return (
-        <section className="bg-white py-8 px-6">
-            <h2 className="text-3xl font-semibold text-gray-800 text-center mb-4">
+        <section className="bg-white dark:bg-slate-900 py-8 px-6 transition-colors">
+            <h2 className="text-3xl font-semibold text-gray-800 dark:text-gray-100 text-center mb-4">
                 Books{cart ? ` (${cart.length})` : ""}
             </h2>
 
@@ -122,14 +124,14 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
                     placeholder="Search by title, author, or category..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full rounded-lg border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
             </div>
 
             {/* Grid wrapper + 'no results' state */}
             <div className="max-w-6xl mx-auto">
                 {filteredBooks.length === 0 ? (
-                    <p className="text-center text-gray-500 text-sm">
+                    <p className="text-center text-gray-500 dark:text-gray-400 text-sm">
                         No books found.
                     </p>
                 ) : (
@@ -137,7 +139,7 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
                         {filteredBooks.map((book) => (
                             <article
                                 key={book.id}
-                                className="bg-white/90 rounded-2xl shadow-md overflow-hidden flex flex-col hover:shadow-lg transition-shadow cursor-pointer"
+                                className="bg-white/90 dark:bg-slate-800 rounded-2xl shadow-md overflow-hidden flex flex-col hover:shadow-lg transition-all cursor-pointer"
                                 onClick={() => setSelectedBook(book)}
                             >
                                 <div className="aspect-[3/4] w-full bg-[#f5f5f5] flex items-center justify-center">
@@ -157,19 +159,19 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
                                         {book.category}
                                     </div>
 
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-2">
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1 line-clamp-2">
                                         {book.title}
                                     </h3>
-                                    <p className="text-sm text-gray-600 mb-2">
+                                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
                                         by {book.author}
                                     </p>
-                                    <p className="text-sm text-gray-500 line-clamp-3">
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-3">
                                         {book.shortDescription}
                                     </p>
 
                                     {/* Add to cart functionality */}
                                     <div className="mt-auto flex items-center justify-between pt-3">
-                                        <div className="text-sm font-bold">${book.price.toFixed(2)}</div>
+                                        <div className="text-sm font-bold dark:text-gray-100">${book.price.toFixed(2)}</div>
                                         <div className="flex items-center gap-3">
                                             <button
                                                 onClick={(e) => {
@@ -201,60 +203,12 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
             </div>
 
             {selectedBook && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl">
-                        <div className="flex justify-between items-start mb-4">
-                            <h3 className="text-2xl font-semibold text-gray-900">
-                                {selectedBook.title}
-                            </h3>
-                            <button
-                                className="text-gray-500 hover:text-gray-700"
-                                onClick={() => setSelectedBook(null)}
-                            >
-                                ✕
-                            </button>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-2">
-                            by {selectedBook.author} · {selectedBook.category}
-                        </p>
-                        <p className="text-gray-800 mb-4">
-                            {selectedBook.description}
-                        </p>
-                        <img
-                            src={selectedBook.imageUrl}
-                            alt={selectedBook.title}
-                            className="w-full rounded-lg"
-                        />
-                        <div className="flex items-center justify-between border-t pt-4">
-                            <div>
-                                <span className="text-2xl font-bold text-gray-900">
-                                    ${selectedBook.price.toFixed(2)}
-                                </span>
-                            </div>
-
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => {
-                                        addToCart(selectedBook!);
-                                    }}
-                                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-                                >
-                                    Add to Cart
-                                </button>
-
-                                <button
-                                    onClick={() => {
-                                        addToWishlist(selectedBook!);
-                                    }}
-                                    aria-label="Add to wishlist"
-                                    className="bg-pink-600 hover:bg-pink-700 text-white px-3 py-1 rounded-lg font-medium transition-colors text-xl"
-                                >
-                                    ♥
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <BookOverlay
+                    book={selectedBook}
+                    onClose={() => setSelectedBook(null)}
+                    onAddToCart={(book) => addToCart(book)}
+                    onAddToWishlist={(book) => void addToWishlist(book)}
+                />
             )}
         </section>
     );

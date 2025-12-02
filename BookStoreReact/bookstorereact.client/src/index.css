@@ -2,6 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+    :root {
+        /* Light mode colors */
+        --color-bg-primary: 255 255 255;
+        --color-bg-secondary: 248 250 252;
+        --color-text-primary: 15 23 42;
+        --color-text-secondary: 71 85 105;
+        --color-border: 226 232 240;
+    }
+
+    .dark {
+        /* Dark mode colors */
+        --color-bg-primary: 15 23 42;
+        --color-bg-secondary: 30 41 59;
+        --color-text-primary: 248 250 252;
+        --color-text-secondary: 203 213 225;
+        --color-border: 51 65 85;
+    }
+
+    /* Apply theme colors to body */
+    body {
+        background-color: rgb(var(--color-bg-primary));
+        color: rgb(var(--color-text-primary));
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+}
+
 @keyframes marquee {
     0% {
         transform: translateX(0);

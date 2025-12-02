@@ -35,9 +35,9 @@ export default function Header({ cart, setCart }: HeaderProps) {
         `${base} ${isActive ? "bg-slate-200 font-semibold" : ""}`;
 
     return (
-        <header className="w-full border-b bg-white">
+        <header className="w-full border-b bg-white dark:bg-slate-800 dark:border-slate-700 transition-colors">
             <div className="max-w-5xl mx-auto flex items-center justify-between p-3 gap-4">
-                <NavLink to="/" className="text-xl font-bold text-blue-700">
+                <NavLink to="/" className="text-xl font-bold text-blue-700 dark:text-blue-400">
                     BookStore
                 </NavLink>
                 <div className="flex items-center gap-3">
@@ -55,7 +55,7 @@ export default function Header({ cart, setCart }: HeaderProps) {
                     <ThemeToggle />
                     <button
                         onClick={() => setIsCartOpen(true)}
-                        className="p-2 rounded hover:bg-slate-100 transition-colors relative"
+                        className="p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors relative"
                         aria-label="Shopping cart"
                     >
                         <TablerShoppingCart className="w-5 h-5" />

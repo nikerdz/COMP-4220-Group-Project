@@ -163,17 +163,17 @@ export function CartOverlay({ isOpen, onClose, cart, setCart }: CartOverlayProps
             <div className="absolute inset-0 bg-black/30" />
 
             <div
-                className="relative w-[60%] h-[85vh] bg-white rounded-2xl shadow-2xl flex flex-col"
+                className="relative w-[60%] h-[85vh] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl flex flex-col transition-colors"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b shrink-0">
-                    <h2 className="text-2xl font-semibold text-gray-900">
+                <div className="flex items-center justify-between p-6 border-b dark:border-slate-700 shrink-0">
+                    <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
                         Shopping Cart ({getTotalItems()} {getTotalItems() === 1 ? 'item' : 'items'})
                     </h2>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full transition-colors dark:text-gray-200"
                         aria-label="Close cart"
                     >
                         <TablerX className="h-6 w-6" />
@@ -193,14 +193,14 @@ export function CartOverlay({ isOpen, onClose, cart, setCart }: CartOverlayProps
                     ) : (
                         <div className="space-y-4">
                             {cart.map((item) => (
-                                <div key={item.book.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                                <div key={item.book.id} className="flex items-center gap-4 p-4 border dark:border-slate-700 rounded-lg">
                                     <img
                                         src={item.book.imageUrl}
                                         alt={item.book.title}
                                         className="w-16 h-20 object-cover rounded"
                                     />
                                     <div className="flex-1">
-                                        <h4 className="font-semibold text-gray-900">
+                                        <h4 className="font-semibold text-gray-900 dark:text-gray-100">
                                             {item.book.title}
                                             {item.book.inStock === 0 && (
                                                 <span className="ml-2 text-xs text-yellow-600 font-medium">
@@ -209,27 +209,27 @@ export function CartOverlay({ isOpen, onClose, cart, setCart }: CartOverlayProps
                                             )}
                                         </h4>
 
-                                        <p className="text-sm text-gray-600">by {item.book.author}</p>
-                                        <p className="text-sm text-gray-500">${item.book.price.toFixed(2)} each</p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-300">by {item.book.author}</p>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">${item.book.price.toFixed(2)} each</p>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() => updateQuantity(item.book.id, item.quantity - 1)}
-                                            className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                                            className="w-8 h-8 rounded-full bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 flex items-center justify-center dark:text-white"
                                         >
                                             −
                                         </button>
-                                        <span className="w-8 text-center font-medium">{item.quantity}</span>
+                                        <span className="w-8 text-center font-medium dark:text-gray-200">{item.quantity}</span>
                                         <button
                                             onClick={() => updateQuantity(item.book.id, item.quantity + 1)}
-                                            className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                                            className="w-8 h-8 rounded-full bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 flex items-center justify-center dark:text-white"
                                         >
                                             +
                                         </button>
                                     </div>
                                     {/* Item Total on the right */}
                                     <div className="text-right min-w-[100px]">
-                                        <p className="text-lg font-bold text-gray-900">
+                                        <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
                                             ${getItemTotal(item).toFixed(2)}
                                         </p>
                                     </div>
@@ -247,7 +247,7 @@ export function CartOverlay({ isOpen, onClose, cart, setCart }: CartOverlayProps
 
                 {/* Footer with Total and Checkout */}
                 {cart.length > 0 && (
-                    <div className="border-t p-6 shrink-0">
+                    <div className="border-t dark:border-slate-700 p-6 shrink-0">
                         <div className="space-y-4">
                             {/* Coupon Section */}
                             <div className="flex gap-2">
@@ -256,7 +256,7 @@ export function CartOverlay({ isOpen, onClose, cart, setCart }: CartOverlayProps
                                     placeholder="Coupon Code"
                                     value={couponCode}
                                     onChange={(e) => setCouponCode(e.target.value)}
-                                    className="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="flex-1 border dark:border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-white"
                                 />
                                 <button
                                     onClick={handleApplyCoupon}
@@ -272,8 +272,8 @@ export function CartOverlay({ isOpen, onClose, cart, setCart }: CartOverlayProps
                             )}
 
                             {/* Totals */}
-                            <div className="space-y-2 pt-2 border-t">
-                                <div className="flex justify-between items-center text-gray-600">
+                            <div className="space-y-2 pt-2 border-t dark:border-slate-700">
+                                <div className="flex justify-between items-center text-gray-600 dark:text-gray-300">
                                     <span>Subtotal</span>
                                     <span>${getSubtotal().toFixed(2)}</span>
                                 </div>
@@ -283,14 +283,14 @@ export function CartOverlay({ isOpen, onClose, cart, setCart }: CartOverlayProps
                                         <span>-${getDiscountAmount().toFixed(2)}</span>
                                     </div>
                                 )}
-                                <div className="flex justify-between items-center text-xl font-bold text-gray-900 pt-2 border-t">
+                                <div className="flex justify-between items-center text-xl font-bold text-gray-900 dark:text-gray-100 pt-2 border-t dark:border-slate-700">
                                     <span>Total</span>
                                     <span>${getFinalTotal().toFixed(2)}</span>
                                 </div>
                             </div>
 
                             {/* Shipping notice on the left */}
-                            <p className="text-xs text-gray-500 text-left">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
                                 Shipping and taxes calculated at checkout
                             </p>
 
