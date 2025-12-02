@@ -112,7 +112,15 @@ export function CartOverlay({ isOpen, onClose, cart, setCart }: CartOverlayProps
                                         className="w-16 h-20 object-cover rounded"
                                     />
                                     <div className="flex-1">
-                                        <h4 className="font-semibold text-gray-900">{item.book.title}</h4>
+                                        <h4 className="font-semibold text-gray-900">
+                                            {item.book.title}
+                                            {item.book.inStock === 0 && (
+                                                <span className="ml-2 text-xs text-yellow-600 font-medium">
+                                                    (Pre-Order)
+                                                </span>
+                                            )}
+                                        </h4>
+
                                         <p className="text-sm text-gray-600">by {item.book.author}</p>
                                         <p className="text-sm text-gray-500">${item.book.price.toFixed(2)} each</p>
                                     </div>

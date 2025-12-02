@@ -86,7 +86,9 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
                 const data = (await res.json()) as BackendBook[];
                 const mapped = data.map(mapBackendToBookItem);
 
-                setBooks(mapped);
+                const inStockOnly = mapped.filter(book => book.inStock > 0);
+
+                setBooks(inStockOnly);
             } catch (err) {
                 // eslint-disable-next-line no-console
                 console.error(err);
@@ -170,12 +172,14 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
+                                                setTimeout(() => alert("Added to cart!"), 0);
                                                 addToCart(book);
                                             }}
                                             className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm"
                                         >
                                             Add to Cart
                                         </button>
+
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -229,6 +233,7 @@ export default function BooksSection({ cart, setCart }: BooksSectionProps) {
                             <button
                                 onClick={() => {
                                     addToCart(selectedBook);
+                                    setTimeout(() => alert("Added to cart!"), 0);
                                 }}
                                 className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                             >

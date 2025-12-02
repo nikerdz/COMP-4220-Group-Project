@@ -129,10 +129,11 @@ export default function Recommendations({
                                                             );
                                                         return [...prev, { book, quantity: 1 }];
                                                     });
+                                                setTimeout(() => alert("Added to cart!"), 0);
                                             }}
                                             className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm"
                                         >
-                                            Add
+                                            Add to Cart
                                         </button>
                                     </div>
                                 </div>
@@ -216,10 +217,11 @@ export default function Recommendations({
                                                         );
                                                     return [...prev, { book, quantity: 1 }];
                                                 });
+                                            setTimeout(() => alert("Added to cart!"), 0);
                                         }}
                                         className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm"
                                     >
-                                        Add
+                                        Add to Cart
                                     </button>
                                 </div>
                             </div>
