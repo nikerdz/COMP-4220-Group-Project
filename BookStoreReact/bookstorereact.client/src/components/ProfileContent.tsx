@@ -4,8 +4,27 @@ import { useEffect, useState } from "react";
 
 type Section = "info" | "orders" | "wishlist";
 
+interface BookItem {
+    id: string;
+    title: string;
+    author: string;
+    category: string;
+    imageUrl: string;
+    shortDescription: string;
+    description: string;
+    price: number;
+    inStock: number;
+}
+
+interface CartItem {
+    book: BookItem;
+    quantity: number;
+}
+
 interface ProfileContentProps {
     activeSection: Section;
+    cart: CartItem[];
+    setCart: (cart: CartItem[] | ((prev: CartItem[]) => CartItem[])) => void;
 }
 
 type User = {
@@ -33,7 +52,7 @@ type WishlistItem = {
     price: number;
 };
 
-export default function ProfileContent({ activeSection }: ProfileContentProps) {
+export default function ProfileContent({ activeSection, cart, setCart }: ProfileContentProps) {
     const [user, setUser] = useState<User | null>(null);
     const [orders, setOrders] = useState<Order[]>([]);
     const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
@@ -69,7 +88,7 @@ export default function ProfileContent({ activeSection }: ProfileContentProps) {
                     const data = await res.json();
                     setOrders(data);
                 } else if (activeSection === "wishlist") {
-                    const res = await fetch(`/api/test/wishlist/${user.userId}`);
+                    const res = await fetch(`/api/wishlist/${user.userId}`);
                     if (!res.ok) throw new Error("Failed to load wishlist.");
                     const data = await res.json();
                     setWishlist(data);
@@ -83,6 +102,95 @@ export default function ProfileContent({ activeSection }: ProfileContentProps) {
 
         fetchData();
     }, [activeSection, user]);
+
+    const removeFromWishlist = async (item: WishlistItem) => {
+        const user = JSON.parse(localStorage.getItem("user")!);
+
+        await fetch("/api/wishlist/remove", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                userId: user.userId,
+                isbn: item.isbn
+            })
+        });
+    };
+
+    const cancelPreOrder = async (orderId: number) => {
+        const res = await fetch(`/api/orders/${orderId}/status`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "Cancelled" })
+        });
+
+        if (res.ok) {
+            alert("Pre-order cancelled.");
+            // refresh orders
+            setOrders(prev =>
+                prev.map(o =>
+                    o.orderId === orderId ? { ...o, status: "Cancelled" } : o
+                )
+            );
+        } else {
+            alert("Unable to cancel pre-order.");
+        }
+    };
+
+
+
+    const moveToCart = async (item: WishlistItem) => {
+        const user = JSON.parse(localStorage.getItem("user")!);
+
+        let didExist = false;
+
+        // 1. Add to cart
+        setCart(prev => {
+            const existing = prev.find(p => p.book.id === item.isbn);
+
+            if (existing) {
+                didExist = true;
+                return prev.map(p =>
+                    p.book.id === item.isbn
+                        ? { ...p, quantity: p.quantity + 1 }
+                        : p
+                );
+            }
+
+            const newBook = {
+                id: item.isbn,
+                title: item.title,
+                author: item.author,
+                category: "Unknown",
+                imageUrl: "/covers/DEFAULT.png",
+                shortDescription: "",
+                description: "",
+                price: item.price,
+                inStock: 999
+            };
+
+            return [...prev, { book: newBook, quantity: 1 }];
+        });
+
+        // Show correct alert ONCE
+        if (didExist) {
+            alert("Quantity increased in cart!");
+        } else {
+            alert("Added to cart!");
+        }
+
+        // 2. Remove from wishlist in DB
+        await fetch("/api/wishlist/remove", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                userId: user.userId,
+                isbn: item.isbn
+            })
+        });
+
+        // 3. Update UI
+        setWishlist(prev => prev.filter(w => w.wishlistID !== item.wishlistID));
+    };
 
     // user info
     if (activeSection === "info") {
@@ -177,12 +285,15 @@ export default function ProfileContent({ activeSection }: ProfileContentProps) {
                                     </span>{" "}
                                     ${order.totalAmount.toFixed(2)}
                                 </div>
-                                <div>
-                                    <span className="font-semibold">
-                                        Items:
-                                    </span>{" "}
-                                    {order.itemCount}
-                                </div>
+                                {order.status === "PreOrder" && (
+                                    <button
+                                        onClick={() => cancelPreOrder(order.orderId)}
+                                        className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded-md text-xs mt-1"
+                                    >
+                                        Cancel Pre-Order
+                                    </button>
+                                )}
+
                             </li>
                         ))}
                     </ul>
@@ -213,6 +324,12 @@ export default function ProfileContent({ activeSection }: ProfileContentProps) {
                                 Added on{" "}
                                 {new Date(item.dateAdded).toLocaleDateString()}
                             </div>
+                            <button
+                                onClick={() => moveToCart(item)}
+                                className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded-md text-xs"
+                            >
+                                Move to Cart
+                            </button>
                         </li>
                     ))}
                 </ul>

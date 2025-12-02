@@ -35,11 +35,13 @@ export default function Login() {
             const data = await response.json();
 
             if (response.ok) {
-                // Store user data
                 localStorage.setItem("user", JSON.stringify(data));
 
-                // Redirect to the intended page or home
-                navigate(from, { replace: true });
+                if (data.type === "AD") {
+                    navigate("/admin", { replace: true });
+                } else {
+                    navigate(from, { replace: true });
+                }
             } else {
                 setError(data.message || "Login failed");
             }

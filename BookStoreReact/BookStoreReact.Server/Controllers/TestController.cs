@@ -365,71 +365,85 @@ namespace BookStoreReact.Server.Controllers
             }
         }
 
-        public class WishlistItemDto
+        // RECOMMENDATIONS
+        [HttpGet("recommendations/{userId:int}")]
+        public ActionResult<IEnumerable<Book>> GetRecommendations(int userId, int limit = 4)
         {
-            public int WishlistID { get; set; }
-            public int UserID { get; set; }
-            public string ISBN { get; set; } = "";
-            public string Title { get; set; } = "";
-            public string Author { get; set; } = "";
-            public decimal Price { get; set; }
-            public DateTime DateAdded { get; set; }
-        }
+            var recs = new List<Book>();
 
-        [HttpGet("wishlist/{userId:int}")]
-        public ActionResult<IEnumerable<WishlistItemDto>> GetWishlist(int userId)
-        {
-            if (userId <= 0)
-                return BadRequest(new { message = "Invalid user ID." });
-
-            var result = new List<WishlistItemDto>();
-
-            using (var conn = new SqlConnection(BuildConnString()))
+            try
             {
+                using var conn = new SqlConnection(BuildConnString());
                 conn.Open();
 
-                const string sql = @"
-            SELECT 
-                w.WishlistID,
-                w.UserID,
-                w.ISBN,
-                w.DateAdded,
-                b.Title,
-                b.Author,
-                b.Price
-            FROM Wishlist w
-            INNER JOIN BookData b ON w.ISBN = b.ISBN
-            WHERE w.UserID = @UserId
-            ORDER BY w.DateAdded DESC;";
+                // Try to find user's top genre from Cart table
+                const string topCatSql = @"
+                    SELECT TOP 1 bd.CategoryID
+                    FROM Cart c
+                    JOIN BookData bd ON bd.ISBN = c.ISBN
+                    WHERE c.CustomerID = @UserId
+                    GROUP BY bd.CategoryID
+                    ORDER BY SUM(ISNULL(c.Quantity, 1)) DESC";
 
-                using (var cmd = new SqlCommand(sql, conn))
+                int? topCat = null;
+                using (var cmd = new SqlCommand(topCatSql, conn))
                 {
                     cmd.Parameters.AddWithValue("@UserId", userId);
+                    var obj = cmd.ExecuteScalar();
+                    if (obj != null && obj != DBNull.Value)
+                        topCat = Convert.ToInt32(obj);
+                }
 
-                    using (var reader = cmd.ExecuteReader())
+                // fetch recommendations excluding items already in user's cart
+                string recSql;
+                if (topCat.HasValue)
+                {
+                    recSql = @"
+                        SELECT TOP (@Limit) ISBN, CategoryID, Title, Author, Price, Year, InStock
+                        FROM BookData
+                        WHERE CategoryID = @Cat
+                          AND ISBN NOT IN (SELECT ISBN FROM Cart WHERE CustomerID = @UserId)
+                        ORDER BY NEWID()";
+                }
+                else
+                {
+                    // random books excluding cart items
+                    recSql = @"
+                        SELECT TOP (@Limit) ISBN, CategoryID, Title, Author, Price, Year, InStock
+                        FROM BookData
+                        WHERE ISBN NOT IN (SELECT ISBN FROM Cart WHERE CustomerID = @UserId)
+                        ORDER BY NEWID()";
+                }
+
+                using (var cmd2 = new SqlCommand(recSql, conn))
+                {
+                    cmd2.Parameters.AddWithValue("@Limit", limit);
+                    cmd2.Parameters.AddWithValue("@UserId", userId);
+                    if (topCat.HasValue)
+                        cmd2.Parameters.AddWithValue("@Cat", topCat.Value);
+
+                    using var reader = cmd2.ExecuteReader();
+                    while (reader.Read())
                     {
-                        while (reader.Read())
+                        recs.Add(new Book
                         {
-                            result.Add(new WishlistItemDto
-                            {
-                                WishlistID = reader.GetInt32(0),
-                                UserID = reader.GetInt32(1),
-                                ISBN = reader.GetString(2),
-                                DateAdded = reader.GetDateTime(3),
-                                Title = reader.GetString(4),
-                                Author = reader.GetString(5),
-                                Price = reader.GetDecimal(6)
-                            });
-                        }
+                            ISBN = reader.GetString(0),
+                            CategoryID = reader.GetInt32(1),
+                            Title = reader.GetString(2),
+                            Author = reader.GetString(3),
+                            Price = reader.GetDecimal(4),
+                            Year = reader.GetString(5),
+                            InStock = reader.GetInt32(6)
+                        });
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error computing recommendations", detail = ex.Message });
+            }
 
-            return Ok(result);
+            return Ok(recs);
         }
-
-
-
-
     }
 }

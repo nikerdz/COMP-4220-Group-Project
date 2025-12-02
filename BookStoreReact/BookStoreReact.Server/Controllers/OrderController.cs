@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using BookStoreReact.Server.Models;
 using BookStoreReact.Server.Data;
+using BookStoreReact.Server.Models;
 
 namespace BookStoreReact.Server.Controllers
 {
@@ -14,26 +11,8 @@ namespace BookStoreReact.Server.Controllers
         /// <summary>
         /// Request model for creating a new order
         /// </summary>
-        public class CreateOrderRequest
-        {
-            public int UserId { get; set; }
-            public string Email { get; set; } = "";
-            public string ShippingAddress { get; set; } = "";
-            public string PaymentMethod { get; set; } = ""; // Last 4 digits or card type
-            public decimal DeliveryFee { get; set; } = 0m;
-            public decimal TaxRate { get; set; } = 0.13m;
-            public string CouponCode { get; set; } // Added for coupon support
-            public List<OrderItemRequest> Items { get; set; } = new List<OrderItemRequest>();
-        }
-
-        public class OrderItemRequest
-        {
-            public string ISBN { get; set; } = "";
-            public string Title { get; set; } = "";
-            public string Author { get; set; } = "";
-            public decimal Price { get; set; }
-            public int Quantity { get; set; } = 1;
-        }
+        
+        
 
         /// <summary>
         /// Validate a coupon code
@@ -77,18 +56,13 @@ namespace BookStoreReact.Server.Controllers
         /// POST /api/orders/create
         /// </summary>
         [HttpPost("create")]
-        public IActionResult CreateOrder([FromBody] CreateOrderRequest req)
+        public IActionResult CreateOrder([FromBody] OrderCreateRequest req)
         {
             try
             {
-                // Validate request
-                if (req.UserId <= 0)
-                    return BadRequest(new { message = "Invalid user ID." });
-
                 if (req.Items == null || req.Items.Count == 0)
-                    return BadRequest(new { message = "Order must contain at least one item." });
+                    return BadRequest(new { message = "Order must have at least one item." });
 
-                // Calculate totals
                 decimal subtotal = 0;
                 var orderItems = new List<OrderItem>();
 
@@ -97,10 +71,7 @@ namespace BookStoreReact.Server.Controllers
                     if (item.Quantity <= 0)
                         return BadRequest(new { message = $"Invalid quantity for item: {item.Title}" });
 
-                    if (item.Price < 0)
-                        return BadRequest(new { message = $"Invalid price for item: {item.Title}" });
-
-                    var orderItem = new OrderItem
+                    var entry = new OrderItem
                     {
                         ISBN = item.ISBN,
                         Title = item.Title,
@@ -110,214 +81,137 @@ namespace BookStoreReact.Server.Controllers
                         Subtotal = item.Price * item.Quantity
                     };
 
-                    subtotal += orderItem.Subtotal;
-                    orderItems.Add(orderItem);
+                    orderItems.Add(entry);
+                    subtotal += entry.Subtotal;
                 }
 
-                // Apply Coupon if provided
+                // Coupon system
                 if (!string.IsNullOrWhiteSpace(req.CouponCode))
                 {
                     var coupon = CouponDAL.LoadCoupon(req.CouponCode);
-                    var couponInstance = new Coupon(); // Needed to call instance methods if they are not static
-                    
-                    // Check if coupon exists and is valid
-                    if (coupon != null && couponInstance.ValidateCoupon(coupon))
-                    {
-                        // ApplyDiscount returns the NEW subtotal (e.g., 80 -> 56)
-                        subtotal = couponInstance.ApplyDiscount(subtotal, coupon);
-                        
-                        // Ensure subtotal doesn't go negative (though logic shouldn't allow it)
-                        if (subtotal < 0) subtotal = 0;
+                    var couponEngine = new Coupon();
 
-                        // Increment usage
+                    if (coupon != null && couponEngine.ValidateCoupon(coupon))
+                    {
+                        subtotal = couponEngine.ApplyDiscount(subtotal, coupon);
                         CouponDAL.IncrementUsage(coupon.CouponID);
                     }
                     else
                     {
-                        return BadRequest(new { message = "Invalid or expired coupon code." });
+                        return BadRequest(new { message = "Invalid or expired coupon." });
                     }
                 }
 
-                decimal taxAmount = subtotal * req.TaxRate;
-                decimal totalAmount = subtotal + taxAmount + req.DeliveryFee;
+                decimal tax = subtotal * req.TaxRate;
+                decimal total = subtotal + tax + req.DeliveryFee;
 
-                // Create order object
                 var order = new Order
                 {
                     UserID = req.UserId,
-                    OrderDate = DateTime.UtcNow,
-                    SubtotalAmount = subtotal,
-                    TaxAmount = taxAmount,
-                    DeliveryFee = req.DeliveryFee,
-                    TotalAmount = totalAmount,
-                    Status = "Pending",
+                    Email = req.Email,
                     ShippingAddress = req.ShippingAddress,
                     PaymentMethod = req.PaymentMethod,
-                    Email = req.Email
+                    DeliveryFee = req.DeliveryFee,
+                    SubtotalAmount = subtotal,
+                    TaxAmount = tax,
+                    TotalAmount = total,
+                    OrderDate = DateTime.UtcNow,
+                    Status = string.IsNullOrWhiteSpace(req.Status)
+                        ? "Pending"
+                        : req.Status,
                 };
 
-                // Save to database
                 var dal = new DALOrder();
                 int orderId = dal.CreateOrder(order, orderItems);
 
                 return Ok(new
                 {
-                    orderId = orderId,
-                    orderDate = order.OrderDate,
-                    subtotal = subtotal,
-                    taxes = taxAmount,
+                    orderId,
+                    subtotal,
+                    tax,
                     delivery = req.DeliveryFee,
-                    totalAmount = totalAmount,
-                    itemCount = orderItems.Count,
-                    status = "Pending"
+                    total,
+                    itemCount = orderItems.Count
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Error creating order.", detail = ex.Message });
+                return StatusCode(500, new { message = "Failed to create order", detail = ex.Message });
             }
         }
 
-        /// <summary>
-        /// Get order history for a user
-        /// GET /api/orders/history/{userId}
-        /// </summary>
-        [HttpGet("history/{userId:int}")]
-        public IActionResult GetOrderHistory(int userId)
+        // --- CUSTOMER ORDER HISTORY ---
+        [HttpGet("history/{userId}")]
+        public IActionResult GetHistory(int userId)
         {
-            try
+            var dal = new DALOrder();
+            var orders = dal.GetOrdersByUserId(userId);
+
+            return Ok(orders.Select(o => new
             {
-                if (userId <= 0)
-                    return BadRequest(new { message = "Invalid user ID." });
-
-                var dal = new DALOrder();
-                var orders = dal.GetOrdersByUserId(userId);
-
-                // Transform to summary format
-                var orderSummaries = orders.Select(o => new
-                {
-                    orderId = o.OrderID,
-                    orderDate = o.OrderDate,
-                    totalAmount = o.TotalAmount,
-                    status = o.Status,
-                    itemCount = o.Items?.Count ?? 0
-                }).ToList();
-
-                return Ok(orderSummaries);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Error retrieving order history.", detail = ex.Message });
-            }
+                orderId = o.OrderID,
+                o.OrderDate,
+                o.TotalAmount,
+                o.Status
+            }));
         }
 
-        /// <summary>
-        /// Get detailed information for a specific order
-        /// GET /api/orders/detail/{orderId}
-        /// </summary>
-        [HttpGet("detail/{orderId:int}")]
+        // --- SPECIFIC ORDER DETAILS ---
+        [HttpGet("detail/{orderId}")]
         public IActionResult GetOrderDetails(int orderId)
         {
-            try
-            {
-                if (orderId <= 0)
-                    return BadRequest(new { message = "Invalid order ID." });
+            var dal = new DALOrder();
+            var order = dal.GetOrderDetails(orderId);
 
-                var dal = new DALOrder();
-                var order = dal.GetOrderDetails(orderId);
+            if (order == null)
+                return NotFound(new { message = "Order not found." });
 
-                if (order == null)
-                    return NotFound(new { message = "Order not found." });
-
-                // Transform to response format
-                var response = new
-                {
-                    order = new
-                    {
-                        orderId = order.OrderID,
-                        userId = order.UserID,
-                        orderDate = order.OrderDate,
-                        subtotal = order.SubtotalAmount,
-                        tax = order.TaxAmount,
-                        delivery = order.DeliveryFee,
-                        total = order.TotalAmount,
-                        status = order.Status,
-                        shippingAddress = order.ShippingAddress,
-                        paymentMethod = order.PaymentMethod,
-                        email = order.Email
-                    },
-                    items = order.Items.Select(i => new
-                    {
-                        orderItemId = i.OrderItemID,
-                        isbn = i.ISBN,
-                        title = i.Title,
-                        author = i.Author,
-                        price = i.Price,
-                        quantity = i.Quantity,
-                        subtotal = i.Subtotal
-                    }).ToList()
-                };
-
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Error retrieving order details.", detail = ex.Message });
-            }
+            return Ok(order);
         }
 
-        /// <summary>
-        /// Update order status (for admin/manager use)
-        /// PUT /api/orders/{orderId}/status
-        /// </summary>
-        public class UpdateStatusRequest
+        // --- USER UPDATES STATUS OF ORDER (rare use-case) ---
+        [HttpPut("{orderId}/status")]
+        public IActionResult UserUpdateOrderStatus(int orderId, [FromBody] UserOrderStatusUpdateRequest body)
         {
-            public string Status { get; set; } = "";
+            var dal = new DALOrder();
+            bool success = dal.UpdateOrderStatus(orderId, body.Status);
+
+            if (!success)
+                return NotFound(new { message = "Order not found." });
+
+            return Ok(new { message = "Status updated.", body.Status });
         }
 
-        [HttpPut("{orderId:int}/status")]
-        public IActionResult UpdateOrderStatus(int orderId, [FromBody] UpdateStatusRequest req)
-        {
-            try
-            {
-                if (orderId <= 0)
-                    return BadRequest(new { message = "Invalid order ID." });
-
-                if (string.IsNullOrWhiteSpace(req.Status))
-                    return BadRequest(new { message = "Status is required." });
-
-                // Validate status values
-                var validStatuses = new[] { "Pending", "Processing", "Shipped", "Delivered", "Cancelled" };
-                if (!validStatuses.Contains(req.Status))
-                    return BadRequest(new { message = "Invalid status. Valid values: Pending, Processing, Shipped, Delivered, Cancelled" });
-
-                var dal = new DALOrder();
-                bool updated = dal.UpdateOrderStatus(orderId, req.Status);
-
-                if (!updated)
-                    return NotFound(new { message = "Order not found." });
-
-                return Ok(new { message = "Order status updated successfully.", status = req.Status });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Error updating order status.", detail = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// Health check endpoint
-        /// GET /api/orders/ping
-        /// </summary>
+        // --- HEALTH CHECK ---
         [HttpGet("ping")]
-        public IActionResult Ping()
-        {
-            return Ok(new
-            {
-                status = "orders-api-ok",
-                time = DateTime.UtcNow,
-                message = "Order API is running"
-            });
-        }
+        public IActionResult Ping() => Ok(new { status = "orders-api-ok", time = DateTime.UtcNow });
+    }
+
+    // UNIQUE DTOs FOR THIS CONTROLLER
+    public class UserOrderStatusUpdateRequest
+    {
+        public string Status { get; set; }
+    }
+
+    public class OrderItemRequest
+    {
+        public string ISBN { get; set; }
+        public string Title { get; set; }
+        public string Author { get; set; }
+        public decimal Price { get; set; }
+        public int Quantity { get; set; }
+    }
+
+    public class OrderCreateRequest
+    {
+        public int UserId { get; set; }
+        public string Email { get; set; }
+        public string ShippingAddress { get; set; }
+        public string PaymentMethod { get; set; }
+        public decimal DeliveryFee { get; set; }
+        public decimal TaxRate { get; set; } = 0.13m;
+        public string CouponCode { get; set; }
+        public string Status { get; set; } = "Pending";
+        public List<OrderItemRequest> Items { get; set; }
     }
 }
