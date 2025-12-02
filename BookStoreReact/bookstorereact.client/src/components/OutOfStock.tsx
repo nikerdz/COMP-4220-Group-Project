@@ -1,0 +1,134 @@
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import {
+    mapBackendToBookItem,
+    type BookItem,
+    type BackendBook,
+    categoryColors,
+} from "./booksMapper";
+
+type CartItem = {
+    book: BookItem;
+    quantity: number;
+};
+
+type OutOfStockProps = {
+    cart: CartItem[];
+    setCart?: Dispatch<SetStateAction<CartItem[]>>;
+    addToCart?: (book: BookItem) => void;
+    maxItems?: number;
+};
+
+export default function OutOfStock({
+    cart,
+    setCart,
+    addToCart,
+    maxItems = 4,
+}: OutOfStockProps) {
+    const [books, setBooks] = useState<BookItem[]>([]);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchBooks = async () => {
+            try {
+                setError(null);
+
+                const res = await fetch("/api/test/books");
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = (await res.json()) as BackendBook[];
+
+                const mapped = data.map(mapBackendToBookItem);
+
+                const out = mapped.filter((b) => b.inStock === 0);
+
+                setBooks(out);
+            } catch (err) {
+                console.error(err);
+                setError("Failed to load out-of-stock books.");
+            }
+        };
+
+        void fetchBooks();
+    }, []);
+
+    if (!books || books.length === 0) return null;
+
+    const getCategoryClass = (category: string) =>
+        categoryColors[category] || categoryColors.Default;
+
+    return (
+        <section className="bg-white py-8 px-6">
+            <div className="max-w-6xl mx-auto">
+
+                {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
+
+                <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                    {books.map((book) => (
+                        <article
+                            key={book.id}
+                            className="bg-white/90 rounded-2xl shadow-md overflow-hidden flex flex-col hover:shadow-lg transition-shadow cursor-pointer"
+                        >
+                            <div className="aspect-[3/4] w-full bg-[#f5f5f5] flex items-center justify-center">
+                                <img
+                                    src={book.imageUrl}
+                                    alt={book.title}
+                                    className="max-h-full max-w-full object-contain"
+                                />
+                            </div>
+
+                            <div className="p-4 flex flex-col flex-1">
+                                <div
+                                    className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold mb-2 text-white bg-red-700`}
+                                >
+                                    Out of Stock
+                                </div>
+
+                                <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-2">
+                                    {book.title}
+                                </h3>
+
+                                <p className="text-sm text-gray-600 mb-2">
+                                    by {book.author}
+                                </p>
+
+                                <p className="text-sm text-gray-500 line-clamp-3">
+                                    {book.shortDescription}
+                                </p>
+
+                                <div className="mt-auto flex items-center justify-between pt-3">
+                                    <div className="text-sm font-bold">
+                                        ${book.price.toFixed(2)}
+                                    </div>
+
+                                    <button
+                                        onClick={() => {
+                                            // fire alert ONCE outside React state updates
+                                            setTimeout(() => alert("Pre-order added!"), 0);
+
+                                            if (addToCart) addToCart(book);
+                                            else if (setCart)
+                                                setCart((prev) => {
+                                                    const existing = prev.find(
+                                                        (i) => i.book.id === book.id
+                                                    );
+                                                    if (existing)
+                                                        return prev.map((i) =>
+                                                            i.book.id === book.id
+                                                                ? { ...i, quantity: i.quantity + 1 }
+                                                                : i
+                                                        );
+                                                    return [...prev, { book, quantity: 1 }];
+                                                });
+                                        }}
+                                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm"
+                                    >
+                                        Pre-Order
+                                    </button>
+                                </div>
+                            </div>
+                        </article>
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+}
