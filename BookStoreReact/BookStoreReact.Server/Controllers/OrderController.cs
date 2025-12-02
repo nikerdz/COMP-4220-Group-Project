@@ -71,7 +71,9 @@ namespace BookStoreReact.Server.Controllers
                     TaxAmount = tax,
                     TotalAmount = total,
                     OrderDate = DateTime.UtcNow,
-                    Status = "Pending"
+                    Status = string.IsNullOrWhiteSpace(req.Status)
+                        ? "Pending"
+                        : req.Status,
                 };
 
                 var dal = new DALOrder();
@@ -164,6 +166,7 @@ namespace BookStoreReact.Server.Controllers
         public decimal DeliveryFee { get; set; }
         public decimal TaxRate { get; set; } = 0.13m;
         public string CouponCode { get; set; }
+        public string Status { get; set; } = "Pending";
         public List<OrderItemRequest> Items { get; set; }
     }
 }

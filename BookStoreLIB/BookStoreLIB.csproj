@@ -207,9 +207,13 @@
     <Compile Include="Coupon.cs" />
     <Compile Include="CouponDAL.cs" />
     <Compile Include="CouponUnitTests.cs" />
+    <Compile Include="LIBDALOrder.cs" />
     <Compile Include="DiscountDataTests.cs" />
     <Compile Include="EditInventoryTests.cs" />
     <Compile Include="OffersTests.cs" />
+    <Compile Include="LIBOrder.cs" />
+    <Compile Include="LIBOrderItem.cs" />
+    <Compile Include="LIBOrderUnitTests.cs" />
     <Compile Include="PaymentUnitTests.cs" />
     <Compile Include="PaymentRules.cs" />
     <Compile Include="LogoutUnitTest.cs" />

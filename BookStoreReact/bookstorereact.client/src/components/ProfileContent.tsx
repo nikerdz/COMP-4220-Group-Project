@@ -116,6 +116,27 @@ export default function ProfileContent({ activeSection, cart, setCart }: Profile
         });
     };
 
+    const cancelPreOrder = async (orderId: number) => {
+        const res = await fetch(`/api/orders/${orderId}/status`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "Cancelled" })
+        });
+
+        if (res.ok) {
+            alert("Pre-order cancelled.");
+            // refresh orders
+            setOrders(prev =>
+                prev.map(o =>
+                    o.orderId === orderId ? { ...o, status: "Cancelled" } : o
+                )
+            );
+        } else {
+            alert("Unable to cancel pre-order.");
+        }
+    };
+
+
 
     const moveToCart = async (item: WishlistItem) => {
         const user = JSON.parse(localStorage.getItem("user")!);
@@ -264,12 +285,15 @@ export default function ProfileContent({ activeSection, cart, setCart }: Profile
                                     </span>{" "}
                                     ${order.totalAmount.toFixed(2)}
                                 </div>
-                                <div>
-                                    <span className="font-semibold">
-                                        Items:
-                                    </span>{" "}
-                                    {order.itemCount}
-                                </div>
+                                {order.status === "PreOrder" && (
+                                    <button
+                                        onClick={() => cancelPreOrder(order.orderId)}
+                                        className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded-md text-xs mt-1"
+                                    >
+                                        Cancel Pre-Order
+                                    </button>
+                                )}
+
                             </li>
                         ))}
                     </ul>
