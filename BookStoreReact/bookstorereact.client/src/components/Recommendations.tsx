@@ -96,6 +96,26 @@ export default function Recommendations({
         );
     }
 
+    // helper to add selected book to cart using same logic as BooksSection
+    const addSelectedToCart = (book: BookItem | null) => {
+        if (!book) return;
+        if (addToCart) {
+            addToCart(book);
+            return;
+        }
+        if (setCart) {
+            setCart((prev) => {
+                const existing = prev.find((i) => i.book.id === book.id);
+                if (existing) {
+                    return prev.map((i) =>
+                        i.book.id === book.id ? { ...i, quantity: i.quantity + 1 } : i
+                    );
+                }
+                return [...prev, { book, quantity: 1 }];
+            });
+        }
+    };
+
     // guest: show random picks
     if (!cart || cart.length === 0) {
         const shuffled = [...books].sort(() => Math.random() - 0.5);
@@ -220,14 +240,7 @@ export default function Recommendations({
 
                                     <div className="flex gap-3">
                                         <button
-                                            onClick={() => {
-                                                if (addToCart) addToCart(selectedBook);
-                                                else if (setCart)
-                                                    setCart((prev) => [
-                                                        ...prev,
-                                                        { book: selectedBook!, quantity: 1 },
-                                                    ]);
-                                            }}
+                                            onClick={() => addSelectedToCart(selectedBook)}
                                             className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                                         >
                                             Add to Cart
@@ -384,14 +397,7 @@ export default function Recommendations({
 
                                 <div className="flex gap-3">
                                     <button
-                                        onClick={() => {
-                                            if (addToCart) addToCart(selectedBook);
-                                            else if (setCart)
-                                                setCart((prev) => [
-                                                    ...prev,
-                                                    { book: selectedBook!, quantity: 1 },
-                                                ]);
-                                        }}
+                                        onClick={() => addSelectedToCart(selectedBook)}
                                         className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                                     >
                                         Add to Cart
