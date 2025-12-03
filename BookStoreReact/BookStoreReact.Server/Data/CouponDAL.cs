@@ -43,7 +43,7 @@ namespace BookStoreReact.Server.Data
             {
                 conn.Open();
                 // Table name is 'Coupon' based on user screenshot
-                var sql = "SELECT CouponID, Code, Description, DiscountRate, IsActive, StartDate, EndDate, UsageLimit, TimesUsed FROM Coupon WHERE Code = @Code";
+                var sql = "SELECT CouponID, Code, Description, DiscountRate, Type, IsActive, StartDate, EndDate, UsageLimit, TimesUsed, MinimumOrderAmount, RequiredAuthor, RequiredCategory FROM Coupon WHERE Code = @Code";
                 
                 using (var cmd = new SqlCommand(sql, conn))
                 {
@@ -58,11 +58,15 @@ namespace BookStoreReact.Server.Data
                                 Code = (string)reader["Code"],
                                 Description = reader["Description"] as string,
                                 DiscountRate = (decimal)reader["DiscountRate"],
+                                Type = reader["Type"] != DBNull.Value ? (DiscountType)(int)reader["Type"] : DiscountType.Percentage,
                                 IsActive = (bool)reader["IsActive"],
                                 StartDate = reader["StartDate"] as DateTime?,
                                 EndDate = reader["EndDate"] as DateTime?,
                                 UsageLimit = reader["UsageLimit"] as int?,
-                                TimesUsed = reader["TimesUsed"] as int?
+                                TimesUsed = reader["TimesUsed"] as int?,
+                                MinimumOrderAmount = reader["MinimumOrderAmount"] as decimal?,
+                                RequiredAuthor = reader["RequiredAuthor"] as string,
+                                RequiredCategory = reader["RequiredCategory"] as string
                             };
                         }
                     }

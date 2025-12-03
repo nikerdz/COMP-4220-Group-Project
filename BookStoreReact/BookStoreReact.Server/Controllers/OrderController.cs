@@ -18,18 +18,63 @@ namespace BookStoreReact.Server.Controllers
         /// Validate a coupon code
         /// POST /api/orders/validate-coupon
         /// </summary>
-        [HttpPost("validate-coupon")]
-        public IActionResult ValidateCoupon([FromBody] string couponCode)
+        public class CouponValidationRequest
         {
+            public string CouponCode { get; set; }
+            public decimal Subtotal { get; set; }
+            public List<OrderItemRequest> Items { get; set; }
+        }
+
+        /// <summary>
+        /// Validate a coupon code
+        /// POST /api/orders/validate-coupon
+        /// </summary>
+        [HttpPost("validate-coupon")]
+        public IActionResult ValidateCoupon([FromBody] object requestBody)
+        {
+            // Handle both string (legacy) and object (new) payloads for backward compatibility during transition
+            string code = "";
+            decimal subtotal = 0;
+            var items = new List<OrderItemRequest>();
+
+            try 
+            {
+                if (requestBody is System.Text.Json.JsonElement json)
+                {
+                    if (json.ValueKind == System.Text.Json.JsonValueKind.String)
+                    {
+                        code = json.GetString();
+                    }
+                    else
+                    {
+                        // Deserialize complex object
+                        var req = System.Text.Json.JsonSerializer.Deserialize<CouponValidationRequest>(json.GetRawText(), new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                        code = req?.CouponCode;
+                        subtotal = req?.Subtotal ?? 0;
+                        items = req?.Items ?? new List<OrderItemRequest>();
+                    }
+                }
+                else if (requestBody is string s)
+                {
+                    code = s;
+                }
+            }
+            catch
+            {
+                 return BadRequest(new { message = "Invalid request format." });
+            }
+
             try
             {
-                if (string.IsNullOrWhiteSpace(couponCode))
+                if (string.IsNullOrWhiteSpace(code))
                     return BadRequest(new { message = "Coupon code is required." });
 
-                var coupon = CouponDAL.LoadCoupon(couponCode);
-                var couponInstance = new Coupon();
+                var coupon = CouponDAL.LoadCoupon(code);
 
-                if (coupon != null && couponInstance.ValidateCoupon(coupon))
+                // Map items to tuple for validation
+                var validationItems = items.Select(i => (i.Author, i.Category, i.Price));
+
+                if (coupon != null && coupon.IsValid(subtotal, validationItems))
                 {
                     return Ok(new
                     {
@@ -42,7 +87,7 @@ namespace BookStoreReact.Server.Controllers
                 }
                 else
                 {
-                    return BadRequest(new { message = "Invalid or expired coupon code." });
+                    return BadRequest(new { message = "Invalid, expired, or not applicable coupon." });
                 }
             }
             catch (Exception ex)
@@ -89,11 +134,13 @@ namespace BookStoreReact.Server.Controllers
                 if (!string.IsNullOrWhiteSpace(req.CouponCode))
                 {
                     var coupon = CouponDAL.LoadCoupon(req.CouponCode);
-                    var couponEngine = new Coupon();
 
-                    if (coupon != null && couponEngine.ValidateCoupon(coupon))
+                    // Map items for validation
+                    var validationItems = req.Items.Select(i => (i.Author, i.Category, i.Price));
+
+                    if (coupon != null && coupon.IsValid(subtotal, validationItems))
                     {
-                        subtotal = couponEngine.ApplyDiscount(subtotal, coupon);
+                        subtotal = coupon.ApplyDiscount(subtotal);
                         CouponDAL.IncrementUsage(coupon.CouponID);
                     }
                     else
@@ -198,6 +245,7 @@ namespace BookStoreReact.Server.Controllers
         public string ISBN { get; set; }
         public string Title { get; set; }
         public string Author { get; set; }
+        public string Category { get; set; } // Added for coupon validation
         public decimal Price { get; set; }
         public int Quantity { get; set; }
     }

@@ -30,7 +30,7 @@ interface CartOverlayProps {
 export function CartOverlay({ isOpen, onClose, cart, setCart }: CartOverlayProps) {
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
-    // Coupon State (must be declared before early return to follow Rules of Hooks)
+    // Coupon State
     const [couponCode, setCouponCode] = useState("");
     const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountRate: number; description: string } | null>(null);
     const [couponMessage, setCouponMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -96,15 +96,30 @@ export function CartOverlay({ isOpen, onClose, cart, setCart }: CartOverlayProps
         }
     };
 
+    // Calculate totals helper (hoisted or defined before use)
+    const getSubtotal = () => cart.reduce((total, item) => total + (item.book.price * item.quantity), 0);
 
     const handleApplyCoupon = async () => {
         if (!couponCode.trim()) return;
 
         try {
+            const payload = {
+                couponCode: couponCode,
+                subtotal: getSubtotal(),
+                items: cart.map(item => ({
+                    isbn: item.book.id,
+                    title: item.book.title,
+                    author: item.book.author,
+                    category: item.book.category,
+                    price: item.book.price,
+                    quantity: item.quantity
+                }))
+            };
+
             const response = await fetch("http://localhost:5187/api/orders/validate-coupon", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(couponCode)
+                body: JSON.stringify(payload)
             });
 
             const data = await response.json();
@@ -128,7 +143,6 @@ export function CartOverlay({ isOpen, onClose, cart, setCart }: CartOverlayProps
 
     // Calculate totals
     const getTotalItems = () => cart.reduce((total, item) => total + item.quantity, 0);
-    const getSubtotal = () => cart.reduce((total, item) => total + (item.book.price * item.quantity), 0);
 
     const getDiscountAmount = () => {
         if (!appliedCoupon) return 0;
@@ -140,10 +154,7 @@ export function CartOverlay({ isOpen, onClose, cart, setCart }: CartOverlayProps
     };
 
     const getItemTotal = (item: CartItem) => item.book.price * item.quantity;
-    const subtotal = cart.reduce(
-        (sum, item) => sum + item.book.price * item.quantity,
-        0
-    );
+    const subtotal = getSubtotal();
 
     const TAX_RATE = 0.13;
     const taxes = subtotal * TAX_RATE;
