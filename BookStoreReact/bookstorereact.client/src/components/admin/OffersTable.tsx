@@ -8,6 +8,7 @@ interface OfferTableProps {
 }
 
 export default function OffersTable({ offers, reload, setEditOffer }: OfferTableProps) {
+
     const handleDelete = async (id: number) => {
         if (!confirm("Delete this offer?")) return;
 
@@ -24,19 +25,19 @@ export default function OffersTable({ offers, reload, setEditOffer }: OfferTable
     };
 
     return (
-        <table className="w-full bg-white shadow border rounded">
+        <table className="w-full bg-white shadow border border-gray-200 rounded">
             <thead className="bg-gray-100">
                 <tr>
-                    <th className="p-2">ID</th>
-                    <th className="p-2">Code</th>
-                    <th className="p-2">Description</th>
-                    <th className="p-2">Discount</th>
-                    <th className="p-2">Usage Limit</th>
-                    <th className="p-2">Times Used</th>
-                    <th className="p-2">Start</th>
-                    <th className="p-2">End</th>
-                    <th className="p-2">Active</th>
-                    <th className="p-2">Actions</th>
+                    <th className="p-2 text-left">ID</th>
+                    <th className="p-2 text-left">Code</th>
+                    <th className="p-2 text-left">Description</th>
+                    <th className="p-2 text-left">Discount</th>
+                    <th className="p-2 text-left">Usage Limit</th>
+                    <th className="p-2 text-left">Times Used</th>
+                    <th className="p-2 text-left">Start</th>
+                    <th className="p-2 text-left">End</th>
+                    <th className="p-2 text-left">Active</th>
+                    <th className="p-2 text-left">Actions</th>
                 </tr>
             </thead>
 
@@ -46,7 +47,7 @@ export default function OffersTable({ offers, reload, setEditOffer }: OfferTable
                         <td className="p-2">{o.CouponID}</td>
                         <td className="p-2">{o.Code}</td>
                         <td className="p-2">{o.Description ?? "—"}</td>
-                        <td className="p-2">{o.DiscountRate}</td>
+                        <td className="p-2">{o.DiscountRate}%</td>
                         <td className="p-2">{o.UsageLimit ?? "∞"}</td>
                         <td className="p-2">{o.TimesUsed}</td>
                         <td className="p-2">{o.StartDate?.substring(0, 10) ?? "—"}</td>
@@ -56,14 +57,14 @@ export default function OffersTable({ offers, reload, setEditOffer }: OfferTable
                         <td className="p-2 flex gap-2">
                             <button
                                 onClick={() => setEditOffer(o)}
-                                className="px-3 py-1 bg-blue-600 text-white rounded"
+                                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
                             >
                                 Edit
                             </button>
 
                             <button
                                 onClick={() => handleDelete(o.CouponID)}
-                                className="px-3 py-1 bg-red-600 text-white rounded"
+                                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
                             >
                                 Delete
                             </button>

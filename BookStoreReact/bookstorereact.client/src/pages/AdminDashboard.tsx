@@ -4,12 +4,13 @@ import AdminQuickActions from "../components/admin/AdminQuickActions";
 import AdminRecentActivity from "../components/admin/AdminRecentActivity";
 import { API_BASE } from "../api";
 
+// Backend returns PascalCase, so match exactly:
 interface DashboardStats {
-    totalUsers: number;
-    totalOrders: number;
-    pendingOrders: number;
-    totalBooks: number;
-    totalSuppliers: number;
+    TotalUsers: number;
+    TotalOrders: number;
+    PendingOrders: number;
+    TotalBooks: number;
+    TotalSuppliers: number;
 }
 
 export default function AdminDashboard() {
@@ -21,12 +22,12 @@ export default function AdminDashboard() {
         { label: "Suppliers", value: 0 },
     ]);
 
-    const reload = async () => {
+    const loadStats = async () => {
         try {
             const res = await fetch(`${API_BASE}/api/admin/dashboard/stats`, {
                 headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${localStorage.getItem("token")}`
+                    "Content-Type": "application/json"
+                    // No token — same rules as all other admin modules
                 }
             });
 
@@ -35,16 +36,16 @@ export default function AdminDashboard() {
             const data: DashboardStats = await res.json();
 
             setStats([
-                { label: "Total Users", value: data.totalUsers },
-                { label: "Total Orders", value: data.totalOrders },
-                { label: "Pending Orders", value: data.pendingOrders },
-                { label: "Books in Inventory", value: data.totalBooks },
-                { label: "Suppliers", value: data.totalSuppliers },
+                { label: "Total Users", value: data.TotalUsers },
+                { label: "Total Orders", value: data.TotalOrders },
+                { label: "Pending Orders", value: data.PendingOrders },
+                { label: "Books in Inventory", value: data.TotalBooks },
+                { label: "Suppliers", value: data.TotalSuppliers },
             ]);
 
         } catch (err) {
             console.error("Failed to load dashboard stats:", err);
-
+            // Keep UI safe
             setStats([
                 { label: "Total Users", value: 0 },
                 { label: "Total Orders", value: 0 },
@@ -56,20 +57,20 @@ export default function AdminDashboard() {
     };
 
     useEffect(() => {
-        reload();
+        loadStats();
     }, []);
 
     return (
         <div>
             <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
 
-            {/* Stats */}
+            {/* Stats Section */}
             <AdminStats stats={stats} />
 
-            {/* Quick actions */}
+            {/* Quick Actions */}
             <AdminQuickActions />
 
-            {/* Recent activity */}
+            {/* Recent Activity (static for now) */}
             <AdminRecentActivity />
         </div>
     );

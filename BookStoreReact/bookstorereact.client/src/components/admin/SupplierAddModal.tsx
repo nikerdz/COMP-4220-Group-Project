@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { API_BASE } from "../../api";
 
-interface AddSupplierModalProps {
+interface Props {
     onClose: () => void;
     reload: () => void;
 }
 
-export default function AddSupplierModal({ onClose, reload }: AddSupplierModalProps) {
+export default function SupplierAddModal({ onClose, reload }: Props) {
+
     const [form, setForm] = useState({
-        SupplierId: "",
+        SupplierID: "",
         Name: ""
     });
 
@@ -18,14 +19,14 @@ export default function AddSupplierModal({ onClose, reload }: AddSupplierModalPr
     };
 
     const handleSave = async () => {
-        if (!form.SupplierId.trim() || !form.Name.trim()) {
-            alert("SupplierId and Name are required.");
+        if (!form.SupplierID || !form.Name) {
+            alert("SupplierID and Name are required.");
             return;
         }
 
         const payload = {
-            SupplierId: Number(form.SupplierId),
-            Name: form.Name.trim()
+            SupplierID: Number(form.SupplierID),
+            Name: form.Name
         };
 
         const res = await fetch(`${API_BASE}/api/admin/suppliers`, {
@@ -35,8 +36,7 @@ export default function AddSupplierModal({ onClose, reload }: AddSupplierModalPr
         });
 
         if (!res.ok) {
-            const msg = await res.text();
-            alert("Failed to add supplier: " + msg);
+            alert("Failed to add supplier.");
             return;
         }
 
@@ -50,24 +50,28 @@ export default function AddSupplierModal({ onClose, reload }: AddSupplierModalPr
                 <h2 className="text-xl font-bold mb-4">Add Supplier</h2>
 
                 <input
+                    name="SupplierID"
                     className="input mb-2 w-full"
-                    name="SupplierId"
                     placeholder="Supplier ID"
-                    value={form.SupplierId}
+                    value={form.SupplierID}
                     onChange={handleChange}
                 />
 
                 <input
-                    className="input mb-4 w-full"
                     name="Name"
+                    className="input mb-4 w-full"
                     placeholder="Supplier Name"
                     value={form.Name}
                     onChange={handleChange}
                 />
 
                 <div className="flex justify-end gap-2">
-                    <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">Cancel</button>
-                    <button onClick={handleSave} className="px-4 py-2 bg-green-600 text-white rounded">Save</button>
+                    <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">
+                        Cancel
+                    </button>
+                    <button onClick={handleSave} className="px-4 py-2 bg-green-600 text-white rounded">
+                        Save
+                    </button>
                 </div>
             </div>
         </div>

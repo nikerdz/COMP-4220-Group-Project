@@ -1,32 +1,29 @@
 import { useEffect, useState } from "react";
 import { API_BASE } from "../api";
-import OrderTable from "../components/admin/OrdersTable";
-import OrderDetailsModal from "../components/admin/OrderItemsModal";
+import OrdersTable from "../components/admin/OrdersTable";
+import EditOrderStatusModal from "../components/admin/OrderItemsModal";
 
 export interface Order {
-    orderID: number;
-    userID: number;
-    orderDate: string;
-    totalAmount: number;
-    subtotalAmount: number;
-    taxAmount: number;
-    deliveryFee: number;
-    status: string;
-    shippingAddress: string | null;
-    paymentMethod: string | null;
-    email: string | null;
+    OrderID: number;
+    UserID: number;
+    OrderDate: string;
+    TotalAmount: number;
+    Status: string;
+    PaymentMethod: string | null;
 }
 
 export default function AdminOrders() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedOrder, setSelectedOrder] = useState<number | null>(null);
 
-    const loadData = () =>
-        fetch(`${API_BASE}/api/admin/orders`)
-            .then((res) => res.json())
-            .then((data) => setOrders(data))
+    const [editOrder, setEditOrder] = useState<Order | null>(null);
+
+    const loadData = () => {
+        return fetch(`${API_BASE}/api/admin/orders`)
+            .then(res => res.json())
+            .then(data => setOrders(data))
             .catch(() => setOrders([]));
+    };
 
     useEffect(() => {
         loadData().finally(() => setLoading(false));
@@ -39,17 +36,18 @@ export default function AdminOrders() {
             {loading ? (
                 <p>Loading orders...</p>
             ) : (
-                <OrderTable
+                <OrdersTable
                     orders={orders}
                     reload={loadData}
-                    setSelectedOrder={setSelectedOrder}
+                    setEditOrder={setEditOrder}
                 />
             )}
 
-            {selectedOrder !== null && (
-                <OrderDetailsModal
-                    orderId={selectedOrder}
-                    onClose={() => setSelectedOrder(null)}
+            {editOrder && (
+                <EditOrderStatusModal
+                    order={editOrder}
+                    onClose={() => setEditOrder(null)}
+                    reload={loadData}
                 />
             )}
         </div>

@@ -15,12 +15,18 @@ namespace BookStoreReact.Server.Controllers
             _dal = new DALOrderAdmin(config);
         }
 
+        
+        // GET ALL ORDERS
+        
         [HttpGet]
         public IActionResult GetOrders()
         {
             return Ok(_dal.GetAll());
         }
 
+        
+        // ADD ORDER  (not used by UI but kept safely)
+        
         [HttpPost]
         public IActionResult AddOrder([FromBody] OrderAdminModel model)
         {
@@ -35,6 +41,9 @@ namespace BookStoreReact.Server.Controllers
             }
         }
 
+        
+        // FULL UPDATE (Not used for UI)
+        
         [HttpPut("{id}")]
         public IActionResult UpdateOrder(int id, [FromBody] OrderAdminModel model)
         {
@@ -52,6 +61,29 @@ namespace BookStoreReact.Server.Controllers
             }
         }
 
+        
+        // UPDATE STATUS ONLY   <--- NEW ENDPOINT
+        
+        [HttpPut("{id}/status")]
+        public IActionResult UpdateOrderStatus(int id, [FromBody] OrderAdminModel model)
+        {
+            if (model == null || string.IsNullOrWhiteSpace(model.Status))
+                return BadRequest(new { error = "Status value is required." });
+
+            try
+            {
+                _dal.UpdateStatus(id, model.Status);
+                return Ok(new { message = "Order status updated." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        
+        // DELETE ORDER
+        
         [HttpDelete("{id}")]
         public IActionResult DeleteOrder(int id)
         {

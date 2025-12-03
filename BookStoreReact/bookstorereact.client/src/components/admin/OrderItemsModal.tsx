@@ -1,67 +1,58 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { API_BASE } from "../../api";
+import type { Order } from "../../pages/AdminOrders";
 
 interface Props {
-    orderId: number;
+    order: Order;
     onClose: () => void;
+    reload: () => void;
 }
 
-export default function OrderItemsModal({ orderId, onClose }: Props) {
-    const [order, setOrder] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+export default function OrderItemsModal({ order, onClose, reload }: Props) {
+    const [status, setStatus] = useState(order.Status);
 
-    useEffect(() => {
-        fetch(`${API_BASE}/api/admin/orders/${orderId}`)
-            .then((res) => res.json())
-            .then((data) => setOrder(data))
-            .finally(() => setLoading(false));
-    }, [orderId]);
+    const handleSave = async () => {
+        const payload = { Status: status };
 
-    if (loading) return null;
+        const res = await fetch(`${API_BASE}/api/admin/orders/${order.OrderID}/status`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            const msg = await res.text();
+            alert("Failed to update status: " + msg);
+            return;
+        }
+
+        reload();
+        onClose();
+    };
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
-            <div className="bg-white p-6 w-[600px] rounded shadow max-h-[90vh] overflow-auto">
-                <h2 className="text-xl font-bold mb-4">Order #{order.orderID}</h2>
+            <div className="bg-white p-6 w-96 rounded shadow">
+                <h2 className="text-xl font-bold mb-4">Update Order Status</h2>
 
-                <p><strong>User:</strong> {order.userID}</p>
-                <p><strong>Date:</strong> {order.orderDate}</p>
-                <p><strong>Status:</strong> {order.status}</p>
-                <p><strong>Total:</strong> ${order.totalAmount}</p>
-                <p><strong>Email:</strong> {order.email ?? "N/A"}</p>
+                <select
+                    className="input mb-4 w-full"
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                >
+                    <option value="Pending">Pending</option>
+                    <option value="Processing">Processing</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
 
-                <h3 className="text-lg font-semibold mt-4 mb-2">Items</h3>
+                <div className="flex justify-end gap-2">
+                    <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">
+                        Cancel
+                    </button>
 
-                <table className="w-full border">
-                    <thead className="bg-gray-100">
-                        <tr>
-                            <th className="p-2">ISBN</th>
-                            <th className="p-2">Title</th>
-                            <th className="p-2">Price</th>
-                            <th className="p-2">Qty</th>
-                            <th className="p-2">Subtotal</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {order.items.map((it: any) => (
-                            <tr key={it.orderItemID} className="border-t">
-                                <td className="p-2">{it.isbn}</td>
-                                <td className="p-2">{it.title}</td>
-                                <td className="p-2">${it.price}</td>
-                                <td className="p-2">{it.quantity}</td>
-                                <td className="p-2">${it.subtotal}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-
-                <div className="flex justify-end mt-4">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 bg-gray-300 rounded"
-                    >
-                        Close
+                    <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded">
+                        Save
                     </button>
                 </div>
             </div>

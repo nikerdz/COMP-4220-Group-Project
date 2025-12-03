@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using BookStoreReact.Server.Data;
-using BookStoreReact.Server.Models;
 
 namespace BookStoreReact.Server.Controllers
 {

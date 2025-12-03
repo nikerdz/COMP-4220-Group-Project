@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { API_BASE } from "../api";
 
 import SuppliersTable from "../components/admin/SuppliersTable";
-import AddSupplierModal from "../components/admin/SupplierAddModal";
-import EditSupplierModal from "../components/admin/SupplierEditModal";
+import SupplierAddModal from "../components/admin/SupplierAddModal";
+import SupplierEditModal from "../components/admin/SupplierEditModal";
 
 export interface Supplier {
-    SupplierId: number;
+    SupplierID: number;
     Name: string;
 }
 
@@ -17,7 +17,6 @@ export default function AdminSuppliers() {
     const [showAdd, setShowAdd] = useState(false);
     const [editSupplier, setEditSupplier] = useState<Supplier | null>(null);
 
-    // === LOAD DATA ===
     const loadData = () => {
         return fetch(`${API_BASE}/api/admin/suppliers`)
             .then(res => res.json())
@@ -52,14 +51,14 @@ export default function AdminSuppliers() {
             )}
 
             {showAdd && (
-                <AddSupplierModal
+                <SupplierAddModal
                     onClose={() => setShowAdd(false)}
                     reload={loadData}
                 />
             )}
 
             {editSupplier && (
-                <EditSupplierModal
+                <SupplierEditModal
                     supplier={editSupplier}
                     onClose={() => setEditSupplier(null)}
                     reload={loadData}

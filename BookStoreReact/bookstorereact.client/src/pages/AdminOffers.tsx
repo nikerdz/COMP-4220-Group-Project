@@ -36,32 +36,40 @@ export default function AdminOffers() {
     }, []);
 
     return (
-        <div>
+        <div className="p-2">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">Offers</h1>
 
                 <button
                     onClick={() => setShowAdd(true)}
-                    className="bg-green-600 text-white px-4 py-2 rounded"
+                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
                 >
                     + Add Offer
                 </button>
             </div>
 
-            {loading ? (
-                <p>Loading offers...</p>
-            ) : (
-                <OfferTable
-                    offers={offers}
+            {/* Scrollable table wrapper */}
+            <div className="max-h-[600px] overflow-y-auto border rounded shadow bg-white">
+                {loading ? (
+                    <p className="p-4">Loading offers...</p>
+                ) : (
+                    <OfferTable
+                        offers={offers}
+                        reload={loadData}
+                        setEditOffer={setEditOffer}
+                    />
+                )}
+            </div>
+
+            {/* Add modal */}
+            {showAdd && (
+                <OfferAddModal
+                    onClose={() => setShowAdd(false)}
                     reload={loadData}
-                    setEditOffer={setEditOffer}
                 />
             )}
 
-            {showAdd && (
-                <OfferAddModal onClose={() => setShowAdd(false)} reload={loadData} />
-            )}
-
+            {/* Edit modal */}
             {editOffer && (
                 <OfferEditModal
                     offer={editOffer}

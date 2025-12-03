@@ -7,7 +7,7 @@ import { API_BASE } from "../api";
 export interface Book {
     ISBN: string;
     CategoryID: number;
-    SupplierId: number | null;
+    SupplierID: number | null;   // 🔥 FIXED casing to match backend
     Title: string;
     Author: string;
     Price: number;
@@ -40,7 +40,7 @@ export default function AdminInventory() {
     }, []);
 
     return (
-        <div>
+        <div className="p-2">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">Inventory</h1>
 
@@ -52,16 +52,19 @@ export default function AdminInventory() {
                 </button>
             </div>
 
-            {loading ? (
-                <p>Loading books...</p>
-            ) : (
-                <InventoryTable
-                    books={books}
-                    reload={reload}
-                    setEditBook={setEditBook}
-                />
-            )}
+            <div className="max-h-[600px] overflow-y-auto border rounded shadow bg-white">
+                {loading ? (
+                    <p className="p-4">Loading books...</p>
+                ) : (
+                    <InventoryTable
+                        books={books}
+                        reload={reload}
+                        setEditBook={setEditBook}
+                    />
+                )}
+            </div>
 
+            {/* Modals */}
             {showAdd && (
                 <AddBookModal
                     onClose={() => setShowAdd(false)}

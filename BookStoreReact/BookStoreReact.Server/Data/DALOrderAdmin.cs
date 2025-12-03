@@ -94,5 +94,22 @@ namespace BookStoreReact.Server.Data
 
             return cmd.ExecuteNonQuery();
         }
+
+        public int UpdateStatus(int orderId, string newStatus)
+        {
+            using SqlConnection conn = new SqlConnection(_connStr);
+            conn.Open();
+
+            SqlCommand cmd = new SqlCommand(
+                @"UPDATE OrderData 
+          SET Status = @S 
+          WHERE OrderID = @ID", conn);
+
+            cmd.Parameters.Add("@ID", SqlDbType.Int).Value = orderId;
+            cmd.Parameters.Add("@S", SqlDbType.VarChar, 20).Value = newStatus;
+
+            return cmd.ExecuteNonQuery();
+        }
+
     }
 }
