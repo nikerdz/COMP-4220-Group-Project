@@ -8,7 +8,7 @@ interface Category {
 }
 
 interface Supplier {
-    SupplierId: number;
+    SupplierID: number;
     Name: string;
 }
 
@@ -23,71 +23,81 @@ export default function EditBookModal({ book, onClose, reload }: EditBookModalPr
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
 
     const [form, setForm] = useState({
-        ISBN: book.ISBN,
-        CategoryID: String(book.CategoryID),
-        SupplierId: book.SupplierId ? String(book.SupplierId) : "",
-        Title: book.Title ?? "",
-        Author: book.Author ?? "",
-        Price: String(book.Price),
-        Year: book.Year ?? "",
-        Edition: book.Edition ?? "",
-        Publisher: book.Publisher ?? "",
-        InStock: String(book.InStock),
+        isbn: book.isbn,
+        categoryID: String(book.categoryID),
+        supplierId: book.supplierId ? String(book.supplierId) : "",
+        title: book.title ?? "",
+        author: book.author ?? "",
+        price: String(book.price),
+        year: book.year ?? "",
+        edition: book.edition ?? "",
+        publisher: book.publisher ?? "",
+        inStock: String(book.inStock),
     });
 
+    // Load dropdown lists
     useEffect(() => {
         async function loadLists() {
             try {
                 const catRes = await fetch(`${API_BASE}/api/admin/categories`);
                 const supRes = await fetch(`${API_BASE}/api/admin/suppliers`);
 
-                setCategories(await catRes.json());
-                setSuppliers(await supRes.json());
+                const catData = await catRes.json();
+                const supData = await supRes.json();
+
+                setCategories(catData);
+
+                // Normalize SupplierID casing
+                setSuppliers(
+                    supData.map((s: any) => ({
+                        SupplierID: s.SupplierID,
+                        Name: s.Name,
+                    }))
+                );
             } catch (err) {
-                console.error("Failed to load dropdown lists:", err);
+                console.error("Failed to load categories or suppliers:", err);
             }
         }
+
         loadLists();
     }, []);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setForm(prev => ({ ...prev, [name]: value }));
+    // Generic handler
+    const handleChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    ) => {
+        setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
     const handleSave = async () => {
-        // VALIDATION
-        if (form.ISBN.length !== 10) return alert("ISBN must be exactly 10 characters.");
-        if (!form.CategoryID) return alert("Category is required.");
-        if (form.Year.length !== 4) return alert("Year must be exactly 4 characters.");
-        if (form.Edition.length !== 2) return alert("Edition must be exactly 2 characters.");
+        // BASIC VALIDATION
+        if (form.isbn.length !== 10) return alert("ISBN must be 10 characters.");
+        if (!form.categoryID) return alert("Category is required.");
+        if (form.year.length !== 4) return alert("Year must be 4 chars.");
+        if (form.edition.length !== 2) return alert("Edition must be 2 chars.");
 
         const payload = {
-            ISBN: form.ISBN,
-            CategoryID: parseInt(form.CategoryID),
-            SupplierId: form.SupplierId ? parseInt(form.SupplierId) : null,
-            Title: form.Title,
-            Author: form.Author,
-            Price: parseFloat(form.Price),
-            Year: form.Year,
-            Edition: form.Edition,
-            Publisher: form.Publisher,
-            InStock: parseInt(form.InStock)
+            isbn: form.isbn,
+            categoryID: Number(form.categoryID),
+            supplierId: form.supplierId ? Number(form.supplierId) : null,
+            title: form.title,
+            author: form.author,
+            price: Number(form.price),
+            year: form.year,
+            edition: form.edition,
+            publisher: form.publisher,
+            inStock: Number(form.inStock),
         };
 
-        console.log("Sending update payload:", payload);
-
-        const res = await fetch(`${API_BASE}/api/admin/books/${book.ISBN}`, {
+        const res = await fetch(`${API_BASE}/api/admin/books/${book.isbn}`, {
             method: "PUT",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
         });
 
         if (!res.ok) {
             const err = await res.json().catch(() => ({ error: "Unknown error" }));
-            alert(`Failed to update: ${err.error}`);
+            alert("Failed to update book: " + err.error);
             return;
         }
 
@@ -96,70 +106,118 @@ export default function EditBookModal({ book, onClose, reload }: EditBookModalPr
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
             <div className="bg-white p-6 w-96 rounded shadow">
                 <h2 className="text-xl font-bold mb-4">Edit Book</h2>
 
+                {/* ISBN */}
                 <input
-                    name="ISBN"
                     className="input mb-2 w-full"
+                    name="isbn"
                     placeholder="ISBN (10 chars)"
-                    value={form.ISBN}
+                    value={form.isbn}
                     onChange={handleChange}
                 />
 
+                {/* Category */}
                 <select
-                    name="CategoryID"
                     className="input mb-2 w-full"
-                    value={form.CategoryID}
+                    name="categoryID"
+                    value={form.categoryID}
                     onChange={handleChange}
                 >
                     <option value="">Select Category</option>
-                    {categories.map(c => (
+                    {categories.map((c) => (
                         <option key={c.CategoryID} value={c.CategoryID}>
                             {c.Name}
                         </option>
                     ))}
                 </select>
 
+                {/* Supplier */}
                 <select
-                    name="SupplierId"
                     className="input mb-2 w-full"
-                    value={form.SupplierId}
+                    name="supplierId"
+                    value={form.supplierId}
                     onChange={handleChange}
                 >
                     <option value="">Select Supplier</option>
-                    {suppliers.map(s => (
-                        <option key={s.SupplierId} value={s.SupplierId}>
+                    {suppliers.map((s) => (
+                        <option key={s.SupplierID} value={s.SupplierID}>
                             {s.Name}
                         </option>
                     ))}
                 </select>
 
-                <input name="Title" className="input mb-2 w-full"
-                    placeholder="Title" value={form.Title} onChange={handleChange} />
+                {/* Other Inputs */}
+                <input
+                    className="input mb-2 w-full"
+                    name="title"
+                    placeholder="Title"
+                    value={form.title}
+                    onChange={handleChange}
+                />
 
-                <input name="Author" className="input mb-2 w-full"
-                    placeholder="Author" value={form.Author} onChange={handleChange} />
+                <input
+                    className="input mb-2 w-full"
+                    name="author"
+                    placeholder="Author"
+                    value={form.author}
+                    onChange={handleChange}
+                />
 
-                <input name="Price" type="number" className="input mb-2 w-full"
-                    placeholder="Price" value={form.Price} onChange={handleChange} />
+                <input
+                    className="input mb-2 w-full"
+                    type="number"
+                    name="price"
+                    placeholder="Price"
+                    value={form.price}
+                    onChange={handleChange}
+                />
 
-                <input name="Year" className="input mb-2 w-full"
-                    placeholder="Year (4 chars)" value={form.Year} onChange={handleChange} />
+                <input
+                    className="input mb-2 w-full"
+                    name="year"
+                    placeholder="Year (4 chars)"
+                    value={form.year}
+                    onChange={handleChange}
+                />
 
-                <input name="Edition" className="input mb-2 w-full"
-                    placeholder="Edition (2 chars)" value={form.Edition} onChange={handleChange} />
+                <input
+                    className="input mb-2 w-full"
+                    name="edition"
+                    placeholder="Edition (2 chars)"
+                    value={form.edition}
+                    onChange={handleChange}
+                />
 
-                <input name="Publisher" className="input mb-2 w-full"
-                    placeholder="Publisher" value={form.Publisher} onChange={handleChange} />
+                <input
+                    className="input mb-2 w-full"
+                    name="publisher"
+                    placeholder="Publisher"
+                    value={form.publisher}
+                    onChange={handleChange}
+                />
 
-                <input name="InStock" type="number" className="input mb-4 w-full"
-                    placeholder="In Stock" value={form.InStock} onChange={handleChange} />
+                <input
+                    className="input mb-4 w-full"
+                    type="number"
+                    name="inStock"
+                    placeholder="In Stock"
+                    value={form.inStock}
+                    onChange={handleChange}
+                />
 
                 <div className="flex justify-end gap-2">
-                    <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">Cancel</button>
-                    <button onClick={handleSave} className="px-4 py-2 bg-green-600 text-white rounded">Save</button>
+                    <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSave}
+                        className="px-4 py-2 bg-green-600 text-white rounded"
+                    >
+                        Save
+                    </button>
                 </div>
             </div>
         </div>

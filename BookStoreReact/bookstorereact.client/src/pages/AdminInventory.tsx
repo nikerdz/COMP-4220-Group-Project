@@ -5,17 +5,17 @@ import EditBookModal from "../components/admin/EditBookModal";
 import { API_BASE } from "../api";
 
 export interface Book {
-    ISBN: string;
-    CategoryID: number;
-    SupplierID: number | null;   // 🔥 FIXED casing to match backend
-    Title: string;
-    Author: string;
-    Price: number;
-    Year: string;
-    Edition: string;
-    Publisher: string;
-    InStock: number;
-    SupplierName?: string | null;
+    isbn: string;
+    categoryID: number;
+    supplierId: number | null;
+    title: string;
+    author: string;
+    price: number;
+    year: string;
+    edition: string;
+    publisher: string;
+    inStock: number;
+    supplierName?: string | null;
 }
 
 export default function AdminInventory() {
@@ -64,7 +64,6 @@ export default function AdminInventory() {
                 )}
             </div>
 
-            {/* Modals */}
             {showAdd && (
                 <AddBookModal
                     onClose={() => setShowAdd(false)}

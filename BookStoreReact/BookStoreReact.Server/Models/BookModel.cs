@@ -2,36 +2,36 @@ using System.Text.Json.Serialization;
 
 public class BookModel
 {
-    [JsonPropertyName("ISBN")]
+    [JsonPropertyName("isbn")]
     public string ISBN { get; set; }
 
-    [JsonPropertyName("CategoryID")]
+    [JsonPropertyName("categoryID")]
     public int CategoryID { get; set; }
 
-    [JsonPropertyName("SupplierId")]
+    [JsonPropertyName("supplierId")]
     public int? SupplierId { get; set; }
 
-    [JsonPropertyName("Title")]
+    [JsonPropertyName("title")]
     public string Title { get; set; }
 
-    [JsonPropertyName("Author")]
+    [JsonPropertyName("author")]
     public string Author { get; set; }
 
-    [JsonPropertyName("Price")]
+    [JsonPropertyName("price")]
     public decimal Price { get; set; }
 
-    [JsonPropertyName("Year")]
-    public string Year { get; set; }
+    [JsonPropertyName("year")]
+    public string? Year { get; set; }
 
-    [JsonPropertyName("Edition")]
+    [JsonPropertyName("edition")]
     public string Edition { get; set; }
 
-    [JsonPropertyName("Publisher")]
-    public string Publisher { get; set; }
+    [JsonPropertyName("publisher")]
+    public string? Publisher { get; set; }
 
-    [JsonPropertyName("InStock")]
+    [JsonPropertyName("inStock")]
     public int InStock { get; set; }
 
-    [JsonPropertyName("SupplierName")]
+    [JsonPropertyName("supplierName")]
     public string? SupplierName { get; set; }
 }

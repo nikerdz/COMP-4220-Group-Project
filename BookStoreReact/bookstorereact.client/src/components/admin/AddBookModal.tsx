@@ -7,38 +7,45 @@ interface Category {
 }
 
 interface Supplier {
-    SupplierId: number;
+    SupplierID: number;
     Name: string;
 }
 
-interface AddBookModalProps {
+interface Props {
     onClose: () => void;
     reload: () => void;
 }
 
-export default function AddBookModal({ onClose, reload }: AddBookModalProps) {
+export default function AddBookModal({ onClose, reload }: Props) {
     const [categories, setCategories] = useState<Category[]>([]);
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
 
     const [form, setForm] = useState({
-        ISBN: "",
-        CategoryID: "",
-        SupplierId: "",
-        Title: "",
-        Author: "",
-        Price: "",
-        Year: "",
-        Edition: "",
-        Publisher: "",
-        InStock: "",
+        isbn: "",
+        categoryID: "",
+        supplierId: "",
+        title: "",
+        author: "",
+        price: "",
+        year: "",
+        edition: "",
+        publisher: "",
+        inStock: "",
     });
 
     useEffect(() => {
         async function loadLists() {
-            const c = await fetch(`${API_BASE}/api/admin/categories`);
-            const s = await fetch(`${API_BASE}/api/admin/suppliers`);
-            setCategories(await c.json());
-            setSuppliers(await s.json());
+            const cat = await (await fetch(`${API_BASE}/api/admin/categories`)).json();
+            const sup = await (await fetch(`${API_BASE}/api/admin/suppliers`)).json();
+
+            // 🔥 Normalize casing so frontend works
+            setCategories(cat);
+            setSuppliers(
+                sup.map((s: any) => ({
+                    SupplierID: s.SupplierID,
+                    Name: s.Name,
+                }))
+            );
         }
         loadLists();
     }, []);
@@ -49,24 +56,22 @@ export default function AddBookModal({ onClose, reload }: AddBookModalProps) {
 
     const handleSave = async () => {
         const payload = {
-            ISBN: form.ISBN,
-            CategoryID: Number(form.CategoryID),
-            SupplierId: form.SupplierId ? Number(form.SupplierId) : null,
-            Title: form.Title,
-            Author: form.Author,
-            Price: Number(form.Price),
-            Year: form.Year,
-            Edition: form.Edition,
-            Publisher: form.Publisher,
-            InStock: Number(form.InStock),
+            isbn: form.isbn,
+            categoryID: Number(form.categoryID),
+            supplierId: form.supplierId ? Number(form.supplierId) : null,
+            title: form.title,
+            author: form.author,
+            price: Number(form.price),
+            year: form.year,
+            edition: form.edition,
+            publisher: form.publisher,
+            inStock: Number(form.inStock),
         };
-
-        console.log("Sending payload:", payload);
 
         const res = await fetch(`${API_BASE}/api/admin/books`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
         });
 
         if (!res.ok) {
@@ -80,57 +85,51 @@ export default function AddBookModal({ onClose, reload }: AddBookModalProps) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
-            <div className="bg-white p-6 w-96 rounded shadow">
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
+            <div className="bg-white p-6 rounded shadow w-96">
                 <h2 className="text-xl font-bold mb-4">Add Book</h2>
 
-                <input name="ISBN" className="input mb-2 w-full" placeholder="ISBN (10 chars)"
-                    value={form.ISBN} onChange={handleChange} />
+                <input name="isbn" placeholder="ISBN (10 chars)" className="input mb-2 w-full"
+                    onChange={handleChange} value={form.isbn} />
 
-                <select name="CategoryID" className="input mb-2 w-full"
-                    value={form.CategoryID} onChange={handleChange}>
+                <select name="categoryID" className="input mb-2 w-full" onChange={handleChange} value={form.categoryID}>
                     <option value="">Select Category</option>
                     {categories.map(c => (
-                        <option key={c.CategoryID} value={c.CategoryID}>
-                            {c.Name}
-                        </option>
+                        <option key={c.CategoryID} value={c.CategoryID}>{c.Name}</option>
                     ))}
                 </select>
 
-                <select name="SupplierId" className="input mb-2 w-full"
-                    value={form.SupplierId} onChange={handleChange}>
+                <select name="supplierId" className="input mb-2 w-full" onChange={handleChange} value={form.supplierId}>
                     <option value="">Select Supplier</option>
                     {suppliers.map(s => (
-                        <option key={s.SupplierId} value={s.SupplierId}>
-                            {s.Name}
-                        </option>
+                        <option key={s.SupplierID} value={s.SupplierID}>{s.Name}</option>
                     ))}
                 </select>
 
-                <input name="Title" className="input mb-2 w-full" placeholder="Title"
-                    value={form.Title} onChange={handleChange} />
+                <input name="title" className="input mb-2 w-full" placeholder="Title"
+                    onChange={handleChange} value={form.title} />
 
-                <input name="Author" className="input mb-2 w-full" placeholder="Author"
-                    value={form.Author} onChange={handleChange} />
+                <input name="author" className="input mb-2 w-full" placeholder="Author"
+                    onChange={handleChange} value={form.author} />
 
-                <input name="Price" type="number" className="input mb-2 w-full" placeholder="Price"
-                    value={form.Price} onChange={handleChange} />
+                <input name="price" type="number" className="input mb-2 w-full" placeholder="Price"
+                    onChange={handleChange} value={form.price} />
 
-                <input name="Year" className="input mb-2 w-full" placeholder="Year (4 chars)"
-                    value={form.Year} onChange={handleChange} />
+                <input name="year" className="input mb-2 w-full" placeholder="Year (4 chars)"
+                    onChange={handleChange} value={form.year} />
 
-                <input name="Edition" className="input mb-2 w-full" placeholder="Edition (2 chars)"
-                    value={form.Edition} onChange={handleChange} />
+                <input name="edition" className="input mb-2 w-full" placeholder="Edition (2 chars)"
+                    onChange={handleChange} value={form.edition} />
 
-                <input name="Publisher" className="input mb-2 w-full" placeholder="Publisher"
-                    value={form.Publisher} onChange={handleChange} />
+                <input name="publisher" className="input mb-2 w-full" placeholder="Publisher"
+                    onChange={handleChange} value={form.publisher} />
 
-                <input name="InStock" type="number" className="input mb-4 w-full"
-                    placeholder="In Stock" value={form.InStock} onChange={handleChange} />
+                <input name="inStock" type="number" className="input mb-4 w-full"
+                    placeholder="In Stock" onChange={handleChange} value={form.inStock} />
 
                 <div className="flex justify-end gap-2">
-                    <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">Cancel</button>
-                    <button onClick={handleSave} className="px-4 py-2 bg-green-600 text-white rounded">Save</button>
+                    <button className="px-4 py-2 bg-gray-300 rounded" onClick={onClose}>Cancel</button>
+                    <button className="px-4 py-2 bg-green-600 text-white rounded" onClick={handleSave}>Save</button>
                 </div>
             </div>
         </div>
