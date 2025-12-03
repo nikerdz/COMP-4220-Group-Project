@@ -1,20 +1,19 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import InventoryTable from "../components/admin/InventoryTable";
 import AddBookModal from "../components/admin/AddBookModal";
 import EditBookModal from "../components/admin/EditBookModal";
 import { API_BASE } from "../api";
 
-// FULL BOOK MODEL USED ACROSS ENTIRE ADMIN SYSTEM
 export interface Book {
     isbn: string;
-    categoryId: number;
-    supplierId?: number | null;
+    categoryID: number;
+    supplierId: number | null;
     title: string;
     author: string;
     price: number;
-    year?: string | null;
+    year: string;
     edition: string;
-    publisher?: string | null;
+    publisher: string;
     inStock: number;
     supplierName?: string | null;
 }
@@ -26,21 +25,14 @@ export default function AdminInventory() {
     const [showAdd, setShowAdd] = useState(false);
     const [editBook, setEditBook] = useState<Book | null>(null);
 
-    const reload = () => {
-        return fetch(`${API_BASE}/api/admin/books`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`
-            }
-        })
-            .then(res => {
-                if (!res.ok) throw new Error("Failed to load books");
-                return res.json();
-            })
-            .then(data => setBooks(data))
-            .catch(err => {
-                console.error("API Error (books):", err);
-                setBooks([]);
-            });
+    const reload = async () => {
+        try {
+            const res = await fetch(`${API_BASE}/api/admin/books`);
+            const data = await res.json();
+            setBooks(data);
+        } catch (err) {
+            console.error("Failed to load books:", err);
+        }
     };
 
     useEffect(() => {
@@ -48,7 +40,7 @@ export default function AdminInventory() {
     }, []);
 
     return (
-        <div>
+        <div className="p-2">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">Inventory</h1>
 
@@ -60,15 +52,17 @@ export default function AdminInventory() {
                 </button>
             </div>
 
-            {loading ? (
-                <p>Loading books...</p>
-            ) : (
-                <InventoryTable
-                    books={books}
-                    reload={reload}
-                    setEditBook={setEditBook}
-                />
-            )}
+            <div className="max-h-[600px] overflow-y-auto border rounded shadow bg-white">
+                {loading ? (
+                    <p className="p-4">Loading books...</p>
+                ) : (
+                    <InventoryTable
+                        books={books}
+                        reload={reload}
+                        setEditBook={setEditBook}
+                    />
+                )}
+            </div>
 
             {showAdd && (
                 <AddBookModal

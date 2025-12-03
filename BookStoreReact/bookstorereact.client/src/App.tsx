@@ -15,8 +15,6 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminOrders from "./pages/AdminOrders";
 import AdminSuppliers from "./pages/AdminSuppliers";
 
-
-//NO HEADER PAGES BELOW IMPORT
 import NotFound from "./pages/NotFound";
 
 interface BookItem {
@@ -78,19 +76,15 @@ export default function App() {
 
     return (
         <Routes>
-
-            {/* ROUTES WITH HEADER */}
             <Route element={<MainLayout cart={cart} setCart={setCart} />}>
                 <Route path="/" element={<Home cart={cart} setCart={setCart} />} />
                 <Route path="/profile" element={<Profile cart={cart} setCart={setCart} />} />
                 <Route path="/contact" element={<Contact />} />
             </Route>
 
-            {/* ROUTES WITHOUT HEADER */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
-            {/* ADMIN ROUTES (ADMIN-ONLY LAYOUT) */}
             <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="inventory" element={<AdminInventory />} />
@@ -101,11 +95,7 @@ export default function App() {
                 <Route path="suppliers" element={<AdminSuppliers />} />
             </Route>
 
-
-            {/* FALLBACK */}
             <Route path="*" element={<NotFound />} />
-
         </Routes>
     );
-
 }

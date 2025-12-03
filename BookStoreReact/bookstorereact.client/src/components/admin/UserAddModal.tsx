@@ -6,136 +6,113 @@ interface UserAddModalProps {
     reload: () => void;
 }
 
-interface UserForm {
-    userName: string;
-    password: string;
-    fullName: string;
-    email: string;
-    type: "CU" | "AD";
-    manager: boolean;
-}
-
 export default function UserAddModal({ onClose, reload }: UserAddModalProps) {
-
-    const [form, setForm] = useState<UserForm>({
-        userName: "",
-        password: "",
-        fullName: "",
-        email: "",
-        type: "CU",
-        manager: false
+    const [form, setForm] = useState({
+        UserName: "",
+        FullName: "",
+        Email: "",
+        Type: "AD",     // admin only
+        Manager: false,
+        Password: ""
     });
 
-    const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-    ) => {
-        const { name, type, value } = e.target;
-        const updatedValue = type === "checkbox"
-            ? (e.target as HTMLInputElement).checked
-            : value;
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value, type } = e.target;
 
-        setForm(prev => ({
-            ...prev,
-            [name]: updatedValue
-        }));
+        if (type === "checkbox") {
+            const checkbox = e.target as HTMLInputElement;
+            setForm(prev => ({ ...prev, [name]: checkbox.checked }));
+        } else {
+            setForm(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleSave = async () => {
-        if (!form.userName.trim() || !form.password.trim()) {
-            alert("Username and password are required.");
-            return;
-        }
+        if (!form.UserName.trim()) return alert("Username is required.");
+        if (!form.Password.trim()) return alert("Password is required.");
+
+        const payload = {
+            UserName: form.UserName,
+            FullName: form.FullName || null,
+            Email: form.Email || null,
+            Type: "AD",
+            Manager: form.Manager,
+            Password: form.Password
+        };
 
         const res = await fetch(`${API_BASE}/api/admin/users`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("token")}`
-            },
-            body: JSON.stringify(form)
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
         });
 
-        if (res.ok) {
-            reload();
-            onClose();
-        } else {
-            alert("Failed to add user.");
+        if (!res.ok) {
+            alert("Failed to add user");
+            return;
         }
+
+        reload();
+        onClose();
     };
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
             <div className="bg-white p-6 w-96 rounded shadow">
-                <h2 className="text-xl font-bold mb-4">Add User</h2>
+
+                <h2 className="text-xl font-bold mb-4">Add Admin User</h2>
 
                 <input
-                    name="userName"
                     className="input mb-2 w-full"
+                    name="UserName"
                     placeholder="Username"
+                    value={form.UserName}
                     onChange={handleChange}
-                    value={form.userName}
                 />
 
                 <input
-                    name="password"
                     className="input mb-2 w-full"
-                    placeholder="Password"
-                    type="password"
-                    onChange={handleChange}
-                    value={form.password}
-                />
-
-                <input
-                    name="fullName"
-                    className="input mb-2 w-full"
+                    name="FullName"
                     placeholder="Full Name"
+                    value={form.FullName}
                     onChange={handleChange}
-                    value={form.fullName}
                 />
 
                 <input
-                    name="email"
                     className="input mb-2 w-full"
+                    name="Email"
                     placeholder="Email"
+                    value={form.Email}
                     onChange={handleChange}
-                    value={form.email}
                 />
 
-                <select
-                    name="type"
+                <input
                     className="input mb-2 w-full"
+                    name="Password"
+                    type="password"
+                    placeholder="Password"
+                    value={form.Password}
                     onChange={handleChange}
-                    value={form.type}
-                >
-                    <option value="CU">Customer</option>
-                    <option value="AD">Admin</option>
-                </select>
+                />
 
-                <label className="flex items-center gap-2 mb-4">
+                <label className="flex items-center gap-2 mb-2">
                     <input
                         type="checkbox"
-                        name="manager"
-                        checked={form.manager}
+                        name="Manager"
+                        checked={form.Manager}
                         onChange={handleChange}
                     />
-                    <span>Manager</span>
+                    <span>Manager Access</span>
                 </label>
 
                 <div className="flex justify-end gap-2">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 bg-gray-300 rounded"
-                    >
+                    <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">
                         Cancel
                     </button>
-
-                    <button
-                        onClick={handleSave}
-                        className="px-4 py-2 bg-green-600 text-white rounded"
-                    >
+                    <button onClick={handleSave} className="px-4 py-2 bg-green-600 text-white rounded">
                         Save
                     </button>
                 </div>
+
             </div>
         </div>
     );

@@ -1,14 +1,33 @@
 export interface BackendBook {
-    isbn: string;
-    categoryID: number;
-    title: string;
-    author: string;
-    price: number;
+    isbn?: string;
+    ISBN?: string;
+
+    categoryID?: number;
+    CategoryID?: number;
+
+    title?: string;
+    Title?: string;
+
+    author?: string;
+    Author?: string;
+
+    price?: number | string | null;
+    Price?: number | string | null;
+
     supplierId?: number;
-    year: string;
+    SupplierId?: number;
+
+    year?: string;
+    Year?: string;
+
     edition?: string;
+    Edition?: string;
+
     publisher?: string;
-    inStock: number;
+    Publisher?: string;
+
+    inStock?: number;
+    InStock?: number;
 }
 
 export interface BookItem {
@@ -42,7 +61,6 @@ const coverMap: Record<string, string> = {
     Default: "/covers/DEFAULT.png",
 };
 
-// category color map
 export const categoryColors: Record<string, string> = {
     Biography: "bg-[#B8BC92] text-white",
     "Self-Help": "bg-[#C94B3B] text-white",
@@ -53,26 +71,41 @@ export const categoryColors: Record<string, string> = {
     Default: "bg-[#3B1F16] text-[#F5EBDD]",
 };
 
-export function getCategoryFromId(id: number): string {
-    return categoryMap[id] ?? "Default";
+export function getCategoryFromId(id?: number): string {
+    return id ? categoryMap[id] ?? "Default" : "Default";
 }
 
 export function mapBackendToBookItem(b: BackendBook): BookItem {
-    const category = getCategoryFromId(b.categoryID);
-    const priceStr = b.price.toFixed(2);
+    // FIX: safely read all possible casings from backend
+    const isbn = b.isbn ?? b.ISBN ?? "";
+    const categoryID = b.categoryID ?? b.CategoryID ?? 0;
+    const title = b.title ?? b.Title ?? "Untitled";
+    const author = b.author ?? b.Author ?? "Unknown";
+    const rawPrice = b.price ?? b.Price ?? 0;
+
+    // FIX: ensure price is always a number
+    const priceNum = Number(rawPrice) || 0;
+
+    const year = b.year ?? b.Year ?? "N/A";
+    const edition = b.edition ?? b.Edition ?? "N/A";
+    const publisher = b.publisher ?? b.Publisher ?? "Unknown";
+    const inStock = b.inStock ?? b.InStock ?? 0;
+
+    const category = getCategoryFromId(categoryID);
 
     return {
-        id: b.isbn,
-        title: b.title,
-        author: b.author,
+        id: isbn,
+        title,
+        author,
         category,
         imageUrl: coverMap[category] || coverMap.Default,
-        shortDescription: `Published ${b.year}. $${priceStr}. In stock: ${b.inStock}`,
-        description: `Publisher: ${b.publisher ?? "Unknown"}. Edition: ${b.edition ?? "N/A"}.`,
-        price: b.price,
-        inStock: b.inStock,
+        shortDescription: `Published ${year}. $${priceNum.toFixed(2)}. In stock: ${inStock}`,
+        description: `Publisher: ${publisher}. Edition: ${edition}.`,
+        price: priceNum,
+        inStock,
     };
 }
+
 export function filterBooks(books: BookItem[], query: string): BookItem[] {
     const q = query.trim().toLowerCase();
     if (q === "") return books;

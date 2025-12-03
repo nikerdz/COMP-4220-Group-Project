@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
+using System.Data;
+using System.Data.SqlClient;
 using BookStoreReact.Server.Models;
 
 namespace BookStoreReact.Server.Data
@@ -14,107 +16,68 @@ namespace BookStoreReact.Server.Data
             _connStr = config.GetConnectionString("DefaultConnection");
         }
 
-        
-        // GET ALL SUPPLIERS
-        
         public List<SupplierModel> GetAll()
         {
             List<SupplierModel> list = new();
 
-            using (SqlConnection conn = new SqlConnection(_connStr))
+            using SqlConnection conn = new SqlConnection(_connStr);
+            conn.Open();
+
+            SqlCommand cmd = new SqlCommand("SELECT SupplierID, Name FROM Supplier ORDER BY SupplierID", conn);
+            SqlDataReader r = cmd.ExecuteReader();
+
+            while (r.Read())
             {
-                conn.Open();
-                SqlCommand cmd = new SqlCommand(@"
-                    SELECT SupplierId, Name 
-                    FROM Supplier
-                    ORDER BY SupplierId;
-                ", conn);
-
-                SqlDataReader r = cmd.ExecuteReader();
-
-                while (r.Read())
+                list.Add(new SupplierModel
                 {
-                    list.Add(new SupplierModel
-                    {
-                        SupplierId = Convert.ToInt32(r["SupplierId"]),
-                        Name = r["Name"].ToString()
-                    });
-                }
+                    SupplierID = Convert.ToInt32(r["SupplierID"]),
+                    Name = r["Name"].ToString() ?? ""
+                });
             }
 
             return list;
         }
 
-        
-        // ADD SUPPLIER (AUTO-GENERATED ID)
-        
-        public void Add(SupplierModel m)
+        public int Add(SupplierModel m)
         {
-            using (SqlConnection conn = new SqlConnection(_connStr))
-            {
-                conn.Open();
+            using SqlConnection conn = new SqlConnection(_connStr);
+            conn.Open();
 
-                // 1) Compute next SupplierId
-                SqlCommand cmdId = new SqlCommand(
-                    "SELECT ISNULL(MAX(SupplierId), 0) + 1 FROM Supplier",
-                    conn
-                );
+            SqlCommand cmd = new SqlCommand(
+                @"INSERT INTO Supplier (SupplierID, Name)
+                  VALUES (@ID, @N)", conn);
 
-                int nextId = Convert.ToInt32(cmdId.ExecuteScalar());
+            cmd.Parameters.Add("@ID", SqlDbType.Int).Value = m.SupplierID;
+            cmd.Parameters.Add("@N", SqlDbType.VarChar, 50).Value = m.Name;
 
-                // 2) Insert supplier with generated ID
-                SqlCommand cmd = new SqlCommand(@"
-                    INSERT INTO Supplier (SupplierId, Name)
-                    VALUES (@ID, @Name);
-                ", conn);
-
-                cmd.Parameters.AddWithValue("@ID", nextId);
-                cmd.Parameters.AddWithValue("@Name", m.Name ?? "");
-
-                cmd.ExecuteNonQuery();
-            }
+            return cmd.ExecuteNonQuery();
         }
 
-        
-        // UPDATE SUPPLIER
-        
-        public void Update(int id, SupplierModel m)
+        public int Update(SupplierModel m)
         {
-            using (SqlConnection conn = new SqlConnection(_connStr))
-            {
-                conn.Open();
+            using SqlConnection conn = new SqlConnection(_connStr);
+            conn.Open();
 
-                SqlCommand cmd = new SqlCommand(@"
-                    UPDATE Supplier SET
-                        Name=@Name
-                    WHERE SupplierId=@ID;
-                ", conn);
+            SqlCommand cmd = new SqlCommand(
+                @"UPDATE Supplier
+                  SET Name=@N
+                  WHERE SupplierID=@ID", conn);
 
-                cmd.Parameters.AddWithValue("@ID", id);
-                cmd.Parameters.AddWithValue("@Name", m.Name ?? "");
+            cmd.Parameters.Add("@ID", SqlDbType.Int).Value = m.SupplierID;
+            cmd.Parameters.Add("@N", SqlDbType.VarChar, 50).Value = m.Name;
 
-                cmd.ExecuteNonQuery();
-            }
+            return cmd.ExecuteNonQuery();
         }
 
-        
-        // DELETE SUPPLIER
-        
-        public void Delete(int id)
+        public int Delete(int id)
         {
-            using (SqlConnection conn = new SqlConnection(_connStr))
-            {
-                conn.Open();
+            using SqlConnection conn = new SqlConnection(_connStr);
+            conn.Open();
 
-                SqlCommand cmd = new SqlCommand(@"
-                    DELETE FROM Supplier
-                    WHERE SupplierId=@ID;
-                ", conn);
+            SqlCommand cmd = new SqlCommand("DELETE FROM Supplier WHERE SupplierID=@ID", conn);
+            cmd.Parameters.Add("@ID", SqlDbType.Int).Value = id;
 
-                cmd.Parameters.AddWithValue("@ID", id);
-
-                cmd.ExecuteNonQuery();
-            }
+            return cmd.ExecuteNonQuery();
         }
     }
 }

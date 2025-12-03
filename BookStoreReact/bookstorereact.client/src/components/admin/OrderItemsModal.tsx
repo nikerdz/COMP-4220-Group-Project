@@ -1,86 +1,58 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { API_BASE } from "../../api";
+import type { Order } from "../../pages/AdminOrders";
 
-interface OrderItem {
-    isbn: string;
-    title: string;
-    price: number;
-    quantity: number;
-}
-
-interface Order {
-    orderId: number;
-}
-
-interface OrderItemsModalProps {
+interface Props {
     order: Order;
     onClose: () => void;
+    reload: () => void;
 }
 
-export default function OrderItemsModal({ order, onClose }: OrderItemsModalProps) {
-    const [items, setItems] = useState<OrderItem[]>([]);
-    const [loading, setLoading] = useState(true);
+export default function OrderItemsModal({ order, onClose, reload }: Props) {
+    const [status, setStatus] = useState(order.Status);
 
-    useEffect(() => {
-        async function loadItems() {
-            try {
-                const res = await fetch(
-                    `${API_BASE}/api/admin/orders/${order.orderId}/items`,
-                    {
-                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-                    }
-                );
-                const data: OrderItem[] = await res.json();
-                setItems(data);
-            } catch (err) {
-                console.error("Failed to load order items", err);
-            } finally {
-                setLoading(false);
-            }
+    const handleSave = async () => {
+        const payload = { Status: status };
+
+        const res = await fetch(`${API_BASE}/api/admin/orders/${order.OrderID}/status`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            const msg = await res.text();
+            alert("Failed to update status: " + msg);
+            return;
         }
 
-        loadItems();
-    }, [order.orderId]);
+        reload();
+        onClose();
+    };
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
-            <div className="bg-white p-6 w-[500px] rounded shadow max-h-[80vh] overflow-y-auto">
-                <h2 className="text-xl font-bold mb-4">
-                    Order #{order.orderId} Items
-                </h2>
+            <div className="bg-white p-6 w-96 rounded shadow">
+                <h2 className="text-xl font-bold mb-4">Update Order Status</h2>
 
-                {loading ? (
-                    <p>Loading items...</p>
-                ) : (
-                    <table className="w-full mb-4 border">
-                        <thead className="bg-gray-100">
-                            <tr>
-                                <th className="p-2 text-left">ISBN</th>
-                                <th className="p-2 text-left">Title</th>
-                                <th className="p-2 text-left">Qty</th>
-                                <th className="p-2 text-left">Price</th>
-                            </tr>
-                        </thead>
+                <select
+                    className="input mb-4 w-full"
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                >
+                    <option value="Pending">Pending</option>
+                    <option value="Processing">Processing</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
 
-                        <tbody>
-                            {items.map((it) => (
-                                <tr key={it.isbn} className="border-t">
-                                    <td className="p-2">{it.isbn}</td>
-                                    <td className="p-2">{it.title}</td>
-                                    <td className="p-2">{it.quantity}</td>
-                                    <td className="p-2">${it.price.toFixed(2)}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
+                <div className="flex justify-end gap-2">
+                    <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">
+                        Cancel
+                    </button>
 
-                <div className="flex justify-end">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 bg-gray-300 rounded"
-                    >
-                        Close
+                    <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded">
+                        Save
                     </button>
                 </div>
             </div>

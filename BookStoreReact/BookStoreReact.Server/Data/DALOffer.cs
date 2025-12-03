@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
+using System.Data.SqlClient;
+using System.Data;
 using BookStoreReact.Server.Models;
 
 namespace BookStoreReact.Server.Data
@@ -14,10 +16,6 @@ namespace BookStoreReact.Server.Data
             _connStr = config.GetConnectionString("DefaultConnection");
         }
 
-
-        
-        // GET ALL COUPONS
-        
         public List<OfferModel> GetAll()
         {
             List<OfferModel> list = new();
@@ -53,24 +51,29 @@ namespace BookStoreReact.Server.Data
                         // Convert 0.10 ? 10%
                         DiscountPercent = (int)(rate * 100),
 
-                        Active = Convert.ToBoolean(r["IsActive"]),
+            SqlCommand cmd = new SqlCommand("SELECT * FROM Coupon ORDER BY CouponID", conn);
+            SqlDataReader r = cmd.ExecuteReader();
 
-                        ExpiryDate = r["EndDate"] == DBNull.Value
-                            ? null
-                            : Convert.ToDateTime(r["EndDate"]).ToString("yyyy-MM-dd")
-                    });
-                }
+            while (r.Read())
+            {
+                list.Add(new OfferModel
+                {
+                    CouponID = Convert.ToInt32(r["CouponID"]),
+                    Code = r["Code"].ToString(),
+                    Description = r["Description"]?.ToString(),
+                    DiscountRate = Convert.ToDecimal(r["DiscountRate"]),
+                    UsageLimit = r["UsageLimit"] == DBNull.Value ? null : Convert.ToInt32(r["UsageLimit"]),
+                    TimesUsed = Convert.ToInt32(r["TimesUsed"]),
+                    StartDate = r["StartDate"] == DBNull.Value ? null : Convert.ToDateTime(r["StartDate"]),
+                    EndDate = r["EndDate"] == DBNull.Value ? null : Convert.ToDateTime(r["EndDate"]),
+                    IsActive = Convert.ToBoolean(r["IsActive"])
+                });
             }
 
             return list;
         }
 
-
-
-        
-        // ADD COUPON
-        
-        public void Add(OfferModel m)
+        public int Add(OfferModel m)
         {
             using (SqlConnection conn = new SqlConnection(_connStr))
             {
@@ -99,62 +102,38 @@ namespace BookStoreReact.Server.Data
             }
         }
 
-
-
-        
-        // UPDATE COUPON
-        
-        public void Update(int id, OfferModel m)
+        public int Update(OfferModel m)
         {
-            using (SqlConnection conn = new SqlConnection(_connStr))
-            {
-                conn.Open();
+            using SqlConnection conn = new SqlConnection(_connStr);
+            conn.Open();
 
-                SqlCommand cmd = new SqlCommand(@"
-                    UPDATE Coupon SET
-                        Code=@C,
-                        Description=@D,
-                        DiscountRate=@DR,
-                        IsActive=@A,
-                        EndDate=@E
-                    WHERE CouponID=@ID;
-                ", conn);
+            SqlCommand cmd = new SqlCommand(
+                @"UPDATE Coupon SET 
+                    Code=@C, Description=@D, DiscountRate=@R,
+                    UsageLimit=@UL, StartDate=@SD, EndDate=@ED, IsActive=@A
+                  WHERE CouponID=@ID", conn);
 
-                cmd.Parameters.AddWithValue("@ID", id);
-                cmd.Parameters.AddWithValue("@C", m.Code ?? "");
-                cmd.Parameters.AddWithValue("@D", m.Description ?? "");
+            cmd.Parameters.AddWithValue("@ID", m.CouponID);
+            cmd.Parameters.AddWithValue("@C", m.Code);
+            cmd.Parameters.AddWithValue("@D", (object?)m.Description ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@R", m.DiscountRate);
+            cmd.Parameters.AddWithValue("@UL", (object?)m.UsageLimit ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@SD", (object?)m.StartDate ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@ED", (object?)m.EndDate ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@A", m.IsActive);
 
-                cmd.Parameters.AddWithValue("@DR", (decimal)m.DiscountPercent / 100m);
-                cmd.Parameters.AddWithValue("@A", m.Active);
-
-                cmd.Parameters.AddWithValue("@E",
-                    string.IsNullOrWhiteSpace(m.ExpiryDate)
-                        ? (object)DBNull.Value
-                        : DateTime.Parse(m.ExpiryDate));
-
-                cmd.ExecuteNonQuery();
-            }
+            return cmd.ExecuteNonQuery();
         }
 
-
-
-        
-        // DELETE COUPON
-        
-        public void Delete(int id)
+        public int Delete(int id)
         {
-            using (SqlConnection conn = new SqlConnection(_connStr))
-            {
-                conn.Open();
+            using SqlConnection conn = new SqlConnection(_connStr);
+            conn.Open();
 
-                SqlCommand cmd = new SqlCommand(@"
-                    DELETE FROM Coupon
-                    WHERE CouponID=@ID;
-                ", conn);
+            SqlCommand cmd = new SqlCommand("DELETE FROM Coupon WHERE CouponID=@ID", conn);
+            cmd.Parameters.AddWithValue("@ID", id);
 
-                cmd.Parameters.AddWithValue("@ID", id);
-                cmd.ExecuteNonQuery();
-            }
+            return cmd.ExecuteNonQuery();
         }
     }
 }

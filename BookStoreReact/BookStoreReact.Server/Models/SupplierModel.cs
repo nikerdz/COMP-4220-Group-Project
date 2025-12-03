@@ -1,8 +1,10 @@
+using System.Text.Json.Serialization;
+
 namespace BookStoreReact.Server.Models
 {
     public class SupplierModel
     {
-        public int SupplierId { get; set; }
-        public string? Name { get; set; }
+        [JsonPropertyName("SupplierID")] public int SupplierID { get; set; }
+        [JsonPropertyName("Name")] public string Name { get; set; } = "";
     }
 }

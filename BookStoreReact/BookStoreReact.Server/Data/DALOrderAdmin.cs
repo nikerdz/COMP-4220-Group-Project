@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
+using System.Data;
+using System.Data.SqlClient;
 using BookStoreReact.Server.Models;
 
 namespace BookStoreReact.Server.Data
@@ -14,112 +16,103 @@ namespace BookStoreReact.Server.Data
             _connStr = config.GetConnectionString("DefaultConnection");
         }
 
-
-        
-        // GET ALL ORDERS (with UserData)
-        
-        public List<OrderModel> GetOrders()
+        public List<OrderAdminModel> GetAll()
         {
-            List<OrderModel> list = new();
+            List<OrderAdminModel> list = new();
 
-            using (SqlConnection conn = new SqlConnection(_connStr))
+            using SqlConnection conn = new SqlConnection(_connStr);
+            conn.Open();
+
+            SqlCommand cmd = new SqlCommand(
+                @"SELECT OrderID, UserID, OrderDate, TotalAmount, Status, PaymentMethod
+                  FROM OrderData ORDER BY OrderID DESC", conn);
+
+            SqlDataReader r = cmd.ExecuteReader();
+
+            while (r.Read())
             {
-                conn.Open();
-
-                SqlCommand cmd = new SqlCommand(@"
-                    SELECT 
-                        o.OrderID,
-                        o.UserID,
-                        u.UserName,
-                        o.OrderDate,
-                        o.TotalAmount,
-                        o.Status
-                    FROM OrderData o
-                    LEFT JOIN UserData u ON o.UserID = u.UserID
-                    ORDER BY o.OrderID DESC;
-                ", conn);
-
-                SqlDataReader r = cmd.ExecuteReader();
-
-                while (r.Read())
+                list.Add(new OrderAdminModel
                 {
-                    list.Add(new OrderModel
-                    {
-                        OrderID = Convert.ToInt32(r["OrderID"]),
-                        UserID = Convert.ToInt32(r["UserID"]),
-                        UserName = r["UserName"]?.ToString(),
-                        OrderDate = Convert.ToDateTime(r["OrderDate"]).ToString("yyyy-MM-dd"),
-                        TotalAmount = Convert.ToDecimal(r["TotalAmount"]),
-                        Status = r["Status"].ToString()
-                    });
-                }
+                    OrderID = Convert.ToInt32(r["OrderID"]),
+                    UserID = Convert.ToInt32(r["UserID"]),
+                    OrderDate = Convert.ToDateTime(r["OrderDate"]),
+                    TotalAmount = Convert.ToDecimal(r["TotalAmount"]),
+                    Status = r["Status"].ToString() ?? "",
+                    PaymentMethod = r["PaymentMethod"]?.ToString()
+                });
             }
 
             return list;
         }
 
-
-        
-        // GET ORDER ITEMS
-        
-        public List<OrderItemModel> GetOrderItems(int orderId)
+        public int Add(OrderAdminModel m)
         {
-            List<OrderItemModel> list = new();
+            using SqlConnection conn = new SqlConnection(_connStr);
+            conn.Open();
 
-            using (SqlConnection conn = new SqlConnection(_connStr))
-            {
-                conn.Open();
+            SqlCommand cmd = new SqlCommand(
+                @"INSERT INTO OrderData (UserID, OrderDate, TotalAmount, Status, PaymentMethod)
+                  VALUES (@U, @D, @T, @S, @P)", conn);
 
-                SqlCommand cmd = new SqlCommand(@"
-                    SELECT i.ISBN, 
-                           b.Title, 
-                           i.Price, 
-                           i.Quantity
-                    FROM OrderItems i
-                    LEFT JOIN BookData b ON i.ISBN = b.ISBN
-                    WHERE i.OrderID = @OID;
-                ", conn);
+            cmd.Parameters.Add("@U", SqlDbType.Int).Value = m.UserID;
+            cmd.Parameters.Add("@D", SqlDbType.DateTime).Value = m.OrderDate;
+            cmd.Parameters.Add("@T", SqlDbType.Decimal).Value = m.TotalAmount;
+            cmd.Parameters.Add("@S", SqlDbType.VarChar, 30).Value = m.Status;
+            cmd.Parameters.Add("@P", SqlDbType.VarChar, 40).Value = m.PaymentMethod ?? (object)DBNull.Value;
 
-                cmd.Parameters.AddWithValue("@OID", orderId);
-
-                SqlDataReader r = cmd.ExecuteReader();
-
-                while (r.Read())
-                {
-                    list.Add(new OrderItemModel
-                    {
-                        ISBN = r["ISBN"].ToString(),
-                        Title = r["Title"]?.ToString(),
-                        Price = Convert.ToDecimal(r["Price"]),
-                        Quantity = Convert.ToInt32(r["Quantity"])
-                    });
-                }
-            }
-
-            return list;
+            return cmd.ExecuteNonQuery();
         }
 
-
-        
-        // UPDATE ORDER STATUS
-        
-        public void UpdateStatus(int orderId, string newStatus)
+        public int Update(OrderAdminModel m)
         {
-            using (SqlConnection conn = new SqlConnection(_connStr))
-            {
-                conn.Open();
+            using SqlConnection conn = new SqlConnection(_connStr);
+            conn.Open();
 
-                SqlCommand cmd = new SqlCommand(@"
-                    UPDATE OrderData
-                    SET Status = @S
-                    WHERE OrderID = @OID;
-                ", conn);
+            SqlCommand cmd = new SqlCommand(
+                @"UPDATE OrderData
+                  SET UserID = @U,
+                      OrderDate = @D,
+                      TotalAmount = @T,
+                      Status = @S,
+                      PaymentMethod = @P
+                  WHERE OrderID = @ID", conn);
 
-                cmd.Parameters.AddWithValue("@OID", orderId);
-                cmd.Parameters.AddWithValue("@S", newStatus);
+            cmd.Parameters.Add("@ID", SqlDbType.Int).Value = m.OrderID;
+            cmd.Parameters.Add("@U", SqlDbType.Int).Value = m.UserID;
+            cmd.Parameters.Add("@D", SqlDbType.DateTime).Value = m.OrderDate;
+            cmd.Parameters.Add("@T", SqlDbType.Decimal).Value = m.TotalAmount;
+            cmd.Parameters.Add("@S", SqlDbType.VarChar, 30).Value = m.Status;
+            cmd.Parameters.Add("@P", SqlDbType.VarChar, 40).Value = m.PaymentMethod ?? (object)DBNull.Value;
 
-                cmd.ExecuteNonQuery();
-            }
+            return cmd.ExecuteNonQuery();
         }
+
+        public int Delete(int id)
+        {
+            using SqlConnection conn = new SqlConnection(_connStr);
+            conn.Open();
+
+            SqlCommand cmd = new SqlCommand("DELETE FROM OrderData WHERE OrderID=@ID", conn);
+            cmd.Parameters.Add("@ID", SqlDbType.Int).Value = id;
+
+            return cmd.ExecuteNonQuery();
+        }
+
+        public int UpdateStatus(int orderId, string newStatus)
+        {
+            using SqlConnection conn = new SqlConnection(_connStr);
+            conn.Open();
+
+            SqlCommand cmd = new SqlCommand(
+                @"UPDATE OrderData 
+          SET Status = @S 
+          WHERE OrderID = @ID", conn);
+
+            cmd.Parameters.Add("@ID", SqlDbType.Int).Value = orderId;
+            cmd.Parameters.Add("@S", SqlDbType.VarChar, 20).Value = newStatus;
+
+            return cmd.ExecuteNonQuery();
+        }
+
     }
 }

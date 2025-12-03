@@ -15,64 +15,53 @@ namespace BookStoreReact.Server.Controllers
             _dal = new DALUserAdmin(config);
         }
 
-        // GET: /api/admin/users
         [HttpGet]
-        public IActionResult GetUsers()
-        {
-            return Ok(_dal.GetAll());
-        }
+        public IActionResult GetUsers() => Ok(_dal.GetAll());
 
-        // POST: /api/admin/users
         [HttpPost]
         public IActionResult AddUser([FromBody] UserAdminModel model)
         {
-            if (model == null)
-                return BadRequest(new { message = "Invalid user data." });
-
-            if (string.IsNullOrWhiteSpace(model.UserName))
-                return BadRequest(new { message = "Username cannot be empty." });
-
-            if (string.IsNullOrWhiteSpace(model.Password))
-                return BadRequest(new { message = "Password cannot be empty." });
-
-            if (string.IsNullOrWhiteSpace(model.Type))
-                return BadRequest(new { message = "User type must be provided." });
-
-            _dal.AddUser(model);
-
-            return Ok(new { message = "User created successfully." });
+            try
+            {
+                model.Type = "AD";
+                _dal.Add(model);
+                return Ok(new { message = "User added successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
-        // PUT: /api/admin/users/{id}
         [HttpPut("{id}")]
         public IActionResult UpdateUser(int id, [FromBody] UserAdminModel model)
         {
-            if (model == null)
-                return BadRequest(new { message = "Invalid user data." });
+            if (id != model.UserID)
+                return BadRequest(new { error = "UserID mismatch." });
 
             try
             {
-                _dal.UpdateUser(id, model);
+                model.Type = "AD"; // enforce!
+                _dal.Update(model);
                 return Ok(new { message = "User updated successfully." });
             }
-            catch
+            catch (Exception ex)
             {
-                return NotFound(new { message = "User not found." });
+                return BadRequest(new { error = ex.Message });
             }
         }
 
-        // DELETE: /api/admin/users/{id}
         [HttpDelete("{id}")]
         public IActionResult DeleteUser(int id)
         {
             try
             {
-                _dal.DeleteUser(id);
-                return Ok(new { message = "User deleted successfully." });
+                _dal.Delete(id);
+                return Ok(new { message = "User deleted." });
             }
-            catch
+            catch (Exception ex)
             {
-                return NotFound(new { message = "User not found." });
+                return BadRequest(new { error = ex.Message });
             }
         }
     }

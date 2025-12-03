@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
+using System.Data;
+using System.Data.SqlClient;
 using BookStoreReact.Server.Models;
 
 namespace BookStoreReact.Server.Data
-
 {
     public class DALDashboard
     {
@@ -17,48 +18,33 @@ namespace BookStoreReact.Server.Data
 
         public DashboardStatsModel GetStats()
         {
-            DashboardStatsModel stats = new DashboardStatsModel();
+            DashboardStatsModel stats = new();
 
-            using (SqlConnection conn = new SqlConnection(_connStr))
-            {
-                conn.Open();
+            using SqlConnection conn = new SqlConnection(_connStr);
+            conn.Open();
 
-                // TOTAL USERS  
-                stats.TotalUsers = ExecuteScalar(conn, "SELECT COUNT(*) FROM UserData");
+            // 1) Total Users
+            using (SqlCommand cmd = new SqlCommand("SELECT COUNT(*) FROM UserData", conn))
+                stats.TotalUsers = Convert.ToInt32(cmd.ExecuteScalar());
 
-                // TOTAL ORDERS
-                stats.TotalOrders = ExecuteScalar(conn, "SELECT COUNT(*) FROM OrderData");
+            // 2) Total Orders
+            using (SqlCommand cmd = new SqlCommand("SELECT COUNT(*) FROM OrderData", conn))
+                stats.TotalOrders = Convert.ToInt32(cmd.ExecuteScalar());
 
-                // PENDING ORDERS
-                stats.PendingOrders = ExecuteScalar(conn, "SELECT COUNT(*) FROM OrderData WHERE Status='Pending'");
+            // 3) Pending Orders
+            using (SqlCommand cmd = new SqlCommand(
+                "SELECT COUNT(*) FROM OrderData WHERE Status='Pending'", conn))
+                stats.PendingOrders = Convert.ToInt32(cmd.ExecuteScalar());
 
-                // BOOK INVENTORY COUNT
-                stats.TotalBooks = ExecuteScalar(conn, "SELECT COUNT(*) FROM BookData");
+            // 4) Total Books
+            using (SqlCommand cmd = new SqlCommand("SELECT COUNT(*) FROM BookData", conn))
+                stats.TotalBooks = Convert.ToInt32(cmd.ExecuteScalar());
 
-                // SUPPLIERS COUNT
-                stats.TotalSuppliers = ExecuteScalar(conn, "SELECT COUNT(*) FROM Supplier");
-            }
+            // 5) Suppliers
+            using (SqlCommand cmd = new SqlCommand("SELECT COUNT(*) FROM Supplier", conn))
+                stats.TotalSuppliers = Convert.ToInt32(cmd.ExecuteScalar());
 
             return stats;
-        }
-
-        private int ExecuteScalar(SqlConnection conn, string query)
-        {
-            try
-            {
-                SqlCommand cmd = new SqlCommand(query, conn);
-                object? result = cmd.ExecuteScalar();
-
-                if (result == null || result == DBNull.Value)
-                    return 0;
-
-                return Convert.ToInt32(result);
-            }
-            catch
-            {
-                // prevents dashboard crash — logs can be added if needed
-                return 0;
-            }
         }
     }
 }

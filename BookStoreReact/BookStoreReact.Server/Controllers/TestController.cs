@@ -12,7 +12,9 @@ namespace BookStoreReact.Server.Controllers
     [Route("api/test")]
     public class TestController : ControllerBase
     {
-        // DB CONN STRING 
+        
+        // DB CONNECTION STRING BUILDER
+        
         private static string BuildConnString()
         {
             var user = Environment.GetEnvironmentVariable("AGILE_DB_USER");
@@ -35,7 +37,9 @@ namespace BookStoreReact.Server.Controllers
             return csb.ConnectionString;
         }
 
-        // PING
+        
+        // HEALTH CHECK / PING
+        
         [HttpGet]
         public IActionResult Get()
         {
@@ -46,7 +50,9 @@ namespace BookStoreReact.Server.Controllers
             });
         }
 
+        
         // LOGIN
+        
         public class LoginRequest
         {
             public string Username { get; set; } = "";
@@ -70,7 +76,8 @@ namespace BookStoreReact.Server.Controllers
                     userId = user.UserID,
                     username = user.LoginName,
                     isManager = user.IsManager,
-                    type = user.Type
+                    type = user.Type,
+                    token = "dummy-token"
                 });
             }
             catch (ArgumentException ex)
@@ -83,7 +90,9 @@ namespace BookStoreReact.Server.Controllers
             }
         }
 
+        
         // REGISTER
+        
         public class RegisterRequest
         {
             public string FullName { get; set; } = "";
@@ -97,7 +106,6 @@ namespace BookStoreReact.Server.Controllers
         {
             try
             {
-                // Validate required fields
                 if (string.IsNullOrWhiteSpace(req.Username))
                     return BadRequest(new { message = "Username is required." });
 
@@ -107,14 +115,12 @@ namespace BookStoreReact.Server.Controllers
                 if (string.IsNullOrWhiteSpace(req.Email))
                     return BadRequest(new { message = "Email is required." });
 
-                // Attempt to register user
                 var dal = new DALUserInfo();
                 bool registered = dal.RegisterUser(req.FullName, req.Username, req.Password, req.Email);
 
                 if (!registered)
                     return BadRequest(new { message = "Username already exists. Please choose a different username." });
 
-                // Auto-login after successful registration
                 var user = new UserData();
                 bool loggedIn = user.LogIn(req.Username, req.Password);
 
@@ -135,42 +141,40 @@ namespace BookStoreReact.Server.Controllers
             }
         }
 
-        // BOOKS 
-        [HttpGet("books")]
-        public ActionResult<IEnumerable<Book>> GetBooks()
+
+
+
+
+        // Returns BookModel from DALBook
+        private readonly IConfiguration _config;
+
+        public TestController(IConfiguration config)
         {
-            var books = new List<Book>();
-
-            using (var conn = new SqlConnection(BuildConnString()))
-            {
-                conn.Open();
-                const string sql = "SELECT ISBN, CategoryID, Title, Author, Price, Year, InStock FROM BookData";
-
-                using (var cmd = new SqlCommand(sql, conn))
-                using (var reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        var book = new Book
-                        {
-                            ISBN = reader.GetString(0),
-                            CategoryID = reader.GetInt32(1),
-                            Title = reader.GetString(2),
-                            Author = reader.GetString(3),
-                            Price = reader.GetDecimal(4),
-                            Year = reader.GetString(5),
-                            InStock = reader.GetInt32(6)
-                        };
-
-                        books.Add(book);
-                    }
-                }
-            }
-
-            return Ok(books);
+            _config = config;
         }
 
-        // CART
+        [HttpGet("books")]
+        public ActionResult<IEnumerable<BookModel>> GetBooks()
+        {
+            try
+            {
+                var dal = new DALBook(_config);
+                var books = dal.GetAllBooks();
+                return Ok(books);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Failed to load books", detail = ex.Message });
+            }
+        }
+
+
+
+
+
+
+        // CART – IN MEMORY (same as before)
+
         private static readonly ConcurrentDictionary<int, Cart> Carts
             = new ConcurrentDictionary<int, Cart>();
 
@@ -180,10 +184,9 @@ namespace BookStoreReact.Server.Controllers
         }
 
         [HttpGet("cart/{userId:int}")]
-        public ActionResult<IEnumerable<Book>> GetCartItems(int userId)
+        public IActionResult GetCartItems(int userId)
         {
-            var cart = GetCart(userId);
-            return Ok(cart.cartBooks);
+            return Ok(GetCart(userId).cartBooks);
         }
 
         public class AddItemRequest
@@ -200,7 +203,6 @@ namespace BookStoreReact.Server.Controllers
             public string Publisher { get; set; } = "";
         }
 
-        // ITEMS 
         [HttpPost("cart/items")]
         public IActionResult AddCartItem([FromBody] AddItemRequest req)
         {
@@ -245,19 +247,20 @@ namespace BookStoreReact.Server.Controllers
         [HttpDelete("cart/{userId:int}")]
         public IActionResult ClearCart(int userId)
         {
-            var cart = GetCart(userId);
-            cart.clearCart();
+            GetCart(userId).clearCart();
             return Ok();
         }
 
+        
         // CHECKOUT
+        
         public class CheckoutRequest
         {
             public int UserId { get; set; }
             public string Email { get; set; } = "";
             public string CardNumber { get; set; } = "";
             public string CVV { get; set; } = "";
-            public string Expiry { get; set; } = ""; // MM/YY
+            public string Expiry { get; set; } = "";
             public string NameOnCard { get; set; } = "";
             public string Address { get; set; } = "";
             public decimal DeliveryFee { get; set; } = 0m;
@@ -270,7 +273,6 @@ namespace BookStoreReact.Server.Controllers
             var cart = GetCart(req.UserId);
             var items = cart.cartBooks;
 
-            // Check if cart is empty
             if (items == null || items.Count == 0)
                 return BadRequest(new { message = "Cart is empty." });
 
@@ -303,15 +305,13 @@ namespace BookStoreReact.Server.Controllers
             var (subtotal, taxes, total) =
                 PaymentRules.ComputeTotals(items, req.TaxRate, req.DeliveryFee);
 
-            // Payment validation passed - now save the order to database
             try
             {
-                // Get last 4 digits of card for storage
-                string last4 = req.CardNumber.Length >= 4 
-                    ? "**** " + req.CardNumber.Substring(req.CardNumber.Length - 4) 
+                string last4 =
+                    req.CardNumber.Length >= 4
+                    ? "**** " + req.CardNumber[^4..]
                     : "****";
 
-                // Create order object
                 var order = new Order
                 {
                     UserID = req.UserId,
@@ -326,11 +326,10 @@ namespace BookStoreReact.Server.Controllers
                     Email = req.Email
                 };
 
-                // Convert cart books to order items
-                var orderItems = new List<OrderItem>();
+                var itemsList = new List<OrderItem>();
                 foreach (var book in items)
                 {
-                    orderItems.Add(new OrderItem
+                    itemsList.Add(new OrderItem
                     {
                         ISBN = book.ISBN,
                         Title = book.Title,
@@ -341,16 +340,14 @@ namespace BookStoreReact.Server.Controllers
                     });
                 }
 
-                // Save order to database
                 var dalOrder = new DALOrder();
-                int orderId = dalOrder.CreateOrder(order, orderItems);
+                int orderId = dalOrder.CreateOrder(order, itemsList);
 
-                // Clear cart after successful order
                 cart.clearCart();
 
                 return Ok(new
                 {
-                    orderId = orderId,
+                    orderId,
                     subtotal,
                     taxes,
                     delivery = req.DeliveryFee,
@@ -365,9 +362,11 @@ namespace BookStoreReact.Server.Controllers
             }
         }
 
+        
         // RECOMMENDATIONS
+        
         [HttpGet("recommendations/{userId:int}")]
-        public ActionResult<IEnumerable<Book>> GetRecommendations(int userId, int limit = 4)
+        public IActionResult GetRecommendations(int userId, int limit = 4)
         {
             var recs = new List<Book>();
 
@@ -376,7 +375,6 @@ namespace BookStoreReact.Server.Controllers
                 using var conn = new SqlConnection(BuildConnString());
                 conn.Open();
 
-                // Try to find user's top genre from Cart table
                 const string topCatSql = @"
                     SELECT TOP 1 bd.CategoryID
                     FROM Cart c
@@ -394,26 +392,19 @@ namespace BookStoreReact.Server.Controllers
                         topCat = Convert.ToInt32(obj);
                 }
 
-                // fetch recommendations excluding items already in user's cart
-                string recSql;
-                if (topCat.HasValue)
-                {
-                    recSql = @"
+                string recSql =
+                    topCat.HasValue
+                    ? @"
                         SELECT TOP (@Limit) ISBN, CategoryID, Title, Author, Price, Year, InStock
                         FROM BookData
                         WHERE CategoryID = @Cat
                           AND ISBN NOT IN (SELECT ISBN FROM Cart WHERE CustomerID = @UserId)
-                        ORDER BY NEWID()";
-                }
-                else
-                {
-                    // random books excluding cart items
-                    recSql = @"
+                        ORDER BY NEWID()"
+                    : @"
                         SELECT TOP (@Limit) ISBN, CategoryID, Title, Author, Price, Year, InStock
                         FROM BookData
                         WHERE ISBN NOT IN (SELECT ISBN FROM Cart WHERE CustomerID = @UserId)
                         ORDER BY NEWID()";
-                }
 
                 using (var cmd2 = new SqlCommand(recSql, conn))
                 {

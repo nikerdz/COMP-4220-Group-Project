@@ -2,8 +2,10 @@ using BookStoreReact.Server.Models;      //  Correct model namespace
 using System;
 using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
+using System.Data.SqlClient;
+using System.Data;
 
-namespace BookStoreReact.Server.Data      // Correct Data namespace
+namespace BookStoreReact.Server.Data
 {
     public class DALUserAdmin
     {
@@ -14,114 +16,93 @@ namespace BookStoreReact.Server.Data      // Correct Data namespace
             _connStr = config.GetConnectionString("DefaultConnection");
         }
 
-        // ------------------------------------------------------------
-        // GET ALL USERS
-        // ------------------------------------------------------------
         public List<UserAdminModel> GetAll()
         {
-            List<UserAdminModel> list = new();
+            var list = new List<UserAdminModel>();
 
-            using (SqlConnection conn = new SqlConnection(_connStr))
+            using SqlConnection conn = new SqlConnection(_connStr);
+            conn.Open();
+
+            SqlCommand cmd = new SqlCommand(
+                "SELECT UserID, UserName, FullName, Email, Type, Manager FROM UserData ORDER BY UserID",
+                conn);
+
+            SqlDataReader r = cmd.ExecuteReader();
+
+            while (r.Read())
             {
-                conn.Open();
-
-                SqlCommand cmd = new SqlCommand(@"
-                    SELECT UserID, UserName, Type, Manager, FullName, Email
-                    FROM UserData
-                    ORDER BY UserID;
-                ", conn);
-
-                SqlDataReader r = cmd.ExecuteReader();
-
-                while (r.Read())
+                list.Add(new UserAdminModel
                 {
-                    list.Add(new UserAdminModel
-                    {
-                        UserID = Convert.ToInt32(r["UserID"]),
-                        UserName = r["UserName"].ToString(),
-                        Type = r["Type"].ToString(),
-                        Manager = Convert.ToBoolean(r["Manager"]),
-                        FullName = r["FullName"] == DBNull.Value ? "" : r["FullName"].ToString(),
-                        Email = r["Email"] == DBNull.Value ? "" : r["Email"].ToString()
-                    });
-                }
+                    UserID = Convert.ToInt32(r["UserID"]),
+                    UserName = r["UserName"].ToString(),
+                    FullName = r["FullName"]?.ToString(),
+                    Email = r["Email"]?.ToString(),
+                    Type = r["Type"].ToString(),
+                    Manager = Convert.ToBoolean(r["Manager"])
+                });
             }
 
             return list;
         }
 
-        // ------------------------------------------------------------
-        // ADD USER
-        // ------------------------------------------------------------
-        public void AddUser(UserAdminModel m)
+        public int Add(UserAdminModel m)
         {
-            using (SqlConnection conn = new SqlConnection(_connStr))
-            {
-                conn.Open();
+            using SqlConnection conn = new SqlConnection(_connStr);
+            conn.Open();
 
-                SqlCommand cmd = new SqlCommand(@"
-                    INSERT INTO UserData
-                        (UserName, Password, Type, Manager, FullName, Email)
-                    VALUES
-                        (@U, @P, @T, @M, @F, @E);
-                ", conn);
+            // FORCE TYPE = AD
+            m.Type = "AD";
 
-                cmd.Parameters.AddWithValue("@U", m.UserName);
-                cmd.Parameters.AddWithValue("@P", m.Password);   // password required
-                cmd.Parameters.AddWithValue("@T", m.Type);
-                cmd.Parameters.AddWithValue("@M", m.Manager);
-                cmd.Parameters.AddWithValue("@F", (object?)m.FullName ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@E", (object?)m.Email ?? DBNull.Value);
+            SqlCommand cmd = new SqlCommand(@"
+                INSERT INTO UserData (UserName, Password, Type, Manager, FullName, Email)
+                VALUES (@U, @P, @T, @M, @F, @E)", conn);
 
-                cmd.ExecuteNonQuery();
-            }
+            cmd.Parameters.Add("@U", SqlDbType.VarChar, 20).Value = m.UserName;
+            cmd.Parameters.Add("@P", SqlDbType.VarChar, 25).Value = m.Password ?? "default";
+            cmd.Parameters.Add("@T", SqlDbType.Char, 2).Value = m.Type;
+            cmd.Parameters.Add("@M", SqlDbType.Bit).Value = m.Manager;
+            cmd.Parameters.Add("@F", SqlDbType.NVarChar, 50).Value = m.FullName ?? (object)DBNull.Value;
+            cmd.Parameters.Add("@E", SqlDbType.VarChar, 50).Value = m.Email ?? (object)DBNull.Value;
+
+            return cmd.ExecuteNonQuery();
         }
 
-        // ------------------------------------------------------------
-        // UPDATE USER
-        // ------------------------------------------------------------
-        public void UpdateUser(int id, UserAdminModel m)
+        public int Update(UserAdminModel m)
         {
-            using (SqlConnection conn = new SqlConnection(_connStr))
-            {
-                conn.Open();
+            using SqlConnection conn = new SqlConnection(_connStr);
+            conn.Open();
 
-                SqlCommand cmd = new SqlCommand(@"
-                    UPDATE UserData SET
-                        FullName = @F,
-                        Email = @E,
-                        Type = @T,
-                        Manager = @M
-                    WHERE UserID = @ID;
-                ", conn);
+            // TYPE always stays AD
+            m.Type = "AD";
 
-                cmd.Parameters.AddWithValue("@ID", id);
-                cmd.Parameters.AddWithValue("@F", (object?)m.FullName ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@E", (object?)m.Email ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@T", m.Type);
-                cmd.Parameters.AddWithValue("@M", m.Manager);
+            SqlCommand cmd = new SqlCommand(@"
+                UPDATE UserData SET
+                    UserName=@U,
+                    FullName=@F,
+                    Email=@E,
+                    Type=@T,
+                    Manager=@M
+                WHERE UserID=@ID", conn);
 
-                cmd.ExecuteNonQuery();
-            }
+            cmd.Parameters.Add("@ID", SqlDbType.Int).Value = m.UserID;
+            cmd.Parameters.Add("@U", SqlDbType.VarChar, 20).Value = m.UserName;
+            cmd.Parameters.Add("@F", SqlDbType.NVarChar, 50).Value = m.FullName ?? (object)DBNull.Value;
+            cmd.Parameters.Add("@E", SqlDbType.VarChar, 50).Value = m.Email ?? (object)DBNull.Value;
+            cmd.Parameters.Add("@T", SqlDbType.Char, 2).Value = m.Type;
+            cmd.Parameters.Add("@M", SqlDbType.Bit).Value = m.Manager;
+
+            return cmd.ExecuteNonQuery();
         }
 
-        // ------------------------------------------------------------
-        // DELETE USER
-        // ------------------------------------------------------------
-        public void DeleteUser(int userId)
+        public int Delete(int id)
         {
-            using (SqlConnection conn = new SqlConnection(_connStr))
-            {
-                conn.Open();
+            using SqlConnection conn = new SqlConnection(_connStr);
+            conn.Open();
 
-                SqlCommand cmd = new SqlCommand(@"
-                    DELETE FROM UserData 
-                    WHERE UserID = @ID;
-                ", conn);
+            SqlCommand cmd = new SqlCommand("DELETE FROM UserData WHERE UserID=@ID", conn);
+            cmd.Parameters.Add("@ID", SqlDbType.Int).Value = id;
 
-                cmd.Parameters.AddWithValue("@ID", userId);
-                cmd.ExecuteNonQuery();
-            }
+            return cmd.ExecuteNonQuery();
         }
     }
 }

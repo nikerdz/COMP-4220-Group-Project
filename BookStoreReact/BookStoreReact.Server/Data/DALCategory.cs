@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
+using System.Data.SqlClient;
+using System.Data;
 using BookStoreReact.Server.Models;
 
 namespace BookStoreReact.Server.Data
@@ -14,112 +16,71 @@ namespace BookStoreReact.Server.Data
             _connStr = config.GetConnectionString("DefaultConnection");
         }
 
-
-        
-        // GET ALL CATEGORIES
-        
         public List<CategoryModel> GetAll()
         {
-            List<CategoryModel> list = new List<CategoryModel>();
+            List<CategoryModel> list = new();
 
-            using (SqlConnection conn = new SqlConnection(_connStr))
+            using SqlConnection conn = new SqlConnection(_connStr);
+            conn.Open();
+
+            SqlCommand cmd = new SqlCommand("SELECT * FROM Category ORDER BY CategoryID", conn);
+            SqlDataReader r = cmd.ExecuteReader();
+
+            while (r.Read())
             {
-                conn.Open();
-                SqlCommand cmd = new SqlCommand(@"
-                    SELECT CategoryID, Name
-                    FROM Category
-                    ORDER BY CategoryID;
-                ", conn);
-
-                SqlDataReader r = cmd.ExecuteReader();
-
-                while (r.Read())
+                list.Add(new CategoryModel
                 {
-                    list.Add(new CategoryModel
-                    {
-                        CategoryID = Convert.ToInt32(r["CategoryID"]),
-                        Name = r["Name"].ToString()
-                    });
-                }
+                    CategoryID = Convert.ToInt32(r["CategoryID"]),
+                    Name = r["Name"]?.ToString(),
+                    Description = r["Description"]?.ToString()
+                });
             }
 
             return list;
         }
 
-
-
-        
-        // ADD CATEGORY (SAFE)
-        
-        public void Add(CategoryModel m)
+        public int Add(CategoryModel m)
         {
-            using (SqlConnection conn = new SqlConnection(_connStr))
-            {
-                conn.Open();
+            using SqlConnection conn = new SqlConnection(_connStr);
+            conn.Open();
 
-                // Generate next CategoryID like your UserData trigger
-                SqlCommand getIdCmd = new SqlCommand(
-                    "SELECT ISNULL(MAX(CategoryID), 0) + 1 FROM Category",
-                    conn
-                );
+            SqlCommand cmd = new SqlCommand(
+                @"INSERT INTO Category (CategoryID, Name, Description)
+                  VALUES (@ID, @N, @D)", conn);
 
-                int nextId = Convert.ToInt32(getIdCmd.ExecuteScalar());
+            cmd.Parameters.Add("@ID", SqlDbType.Int).Value = m.CategoryID;
+            cmd.Parameters.Add("@N", SqlDbType.VarChar, 80).Value = m.Name ?? (object)DBNull.Value;
+            cmd.Parameters.Add("@D", SqlDbType.VarChar, 255).Value = m.Description ?? (object)DBNull.Value;
 
-                SqlCommand cmd = new SqlCommand(@"
-                    INSERT INTO Category (CategoryID, Name)
-                    VALUES (@ID, @N);
-                ", conn);
-
-                cmd.Parameters.AddWithValue("@ID", nextId);
-                cmd.Parameters.AddWithValue("@N", m.Name ?? "");
-
-                cmd.ExecuteNonQuery();
-            }
+            return cmd.ExecuteNonQuery();
         }
 
-
-
-        
-        // UPDATE CATEGORY
-        
-        public void Update(int id, CategoryModel m)
+        public int Update(CategoryModel m)
         {
-            using (SqlConnection conn = new SqlConnection(_connStr))
-            {
-                conn.Open();
+            using SqlConnection conn = new SqlConnection(_connStr);
+            conn.Open();
 
-                SqlCommand cmd = new SqlCommand(@"
-                    UPDATE Category SET
-                        Name=@N
-                    WHERE CategoryID=@ID;
-                ", conn);
+            SqlCommand cmd = new SqlCommand(
+                @"UPDATE Category
+                  SET Name=@N, Description=@D
+                  WHERE CategoryID=@ID", conn);
 
-                cmd.Parameters.AddWithValue("@ID", id);
-                cmd.Parameters.AddWithValue("@N", m.Name ?? "");
+            cmd.Parameters.Add("@ID", SqlDbType.Int).Value = m.CategoryID;
+            cmd.Parameters.Add("@N", SqlDbType.VarChar, 80).Value = m.Name ?? (object)DBNull.Value;
+            cmd.Parameters.Add("@D", SqlDbType.VarChar, 255).Value = m.Description ?? (object)DBNull.Value;
 
-                cmd.ExecuteNonQuery();
-            }
+            return cmd.ExecuteNonQuery();
         }
 
-
-
-        
-        // DELETE CATEGORY
-        
-        public void Delete(int id)
+        public int Delete(int id)
         {
-            using (SqlConnection conn = new SqlConnection(_connStr))
-            {
-                conn.Open();
+            using SqlConnection conn = new SqlConnection(_connStr);
+            conn.Open();
 
-                SqlCommand cmd = new SqlCommand(@"
-                    DELETE FROM Category
-                    WHERE CategoryID=@ID;
-                ", conn);
+            SqlCommand cmd = new SqlCommand("DELETE FROM Category WHERE CategoryID=@ID", conn);
+            cmd.Parameters.Add("@ID", SqlDbType.Int).Value = id;
 
-                cmd.Parameters.AddWithValue("@ID", id);
-                cmd.ExecuteNonQuery();
-            }
+            return cmd.ExecuteNonQuery();
         }
     }
 }

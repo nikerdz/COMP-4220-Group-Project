@@ -16,44 +16,33 @@ namespace BookStoreReact.Server.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetOffers()
+        public IActionResult GetAll()
         {
             return Ok(_dal.GetAll());
         }
 
         [HttpPost]
-        public IActionResult AddOffer([FromBody] OfferModel model)
+        public IActionResult Add([FromBody] OfferModel model)
         {
             _dal.Add(model);
-            return Ok(new { message = "Offer added successfully" });
+            return Ok(new { message = "Offer added successfully." });
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateOffer(int id, [FromBody] OfferModel model)
+        public IActionResult Update(int id, [FromBody] OfferModel model)
         {
-            try
-            {
-                _dal.Update(id, model);
-                return Ok(new { message = "Offer updated successfully" });
-            }
-            catch
-            {
-                return NotFound(new { message = "Offer not found" });
-            }
+            if (id != model.CouponID)
+                return BadRequest(new { error = "ID mismatch." });
+
+            _dal.Update(model);
+            return Ok(new { message = "Offer updated successfully." });
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteOffer(int id)
+        public IActionResult Delete(int id)
         {
-            try
-            {
-                _dal.Delete(id);
-                return Ok(new { message = "Offer deleted successfully" });
-            }
-            catch
-            {
-                return NotFound(new { message = "Offer not found" });
-            }
+            _dal.Delete(id);
+            return Ok(new { message = "Offer deleted successfully." });
         }
     }
 }

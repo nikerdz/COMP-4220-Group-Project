@@ -15,53 +15,87 @@ namespace BookStoreReact.Server.Controllers
             _dal = new DALOrderAdmin(config);
         }
 
-        // GET: /api/admin/orders
+        
+        // GET ALL ORDERS
+        
         [HttpGet]
         public IActionResult GetOrders()
         {
-            var orders = _dal.GetOrders();
-            return Ok(orders);
+            return Ok(_dal.GetAll());
         }
 
-        // GET: /api/admin/orders/{orderId}/items
-        [HttpGet("{orderId}/items")]
-        public IActionResult GetOrderItems(int orderId)
+        
+        // ADD ORDER  (not used by UI but kept safely)
+        
+        [HttpPost]
+        public IActionResult AddOrder([FromBody] OrderAdminModel model)
         {
-            var items = _dal.GetOrderItems(orderId);
-
-            if (items == null || items.Count == 0)
-                return NotFound(new { message = "No items found for this order." });
-
-            return Ok(items);
+            try
+            {
+                _dal.Add(model);
+                return Ok(new { message = "Order added successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
-        // PUT: /api/admin/orders/{orderId}/status
-        [HttpPut("{orderId}/status")]
-        public IActionResult UpdateStatus(int orderId, [FromBody] AdminOrderStatusUpdateRequest body)
+        
+        // FULL UPDATE (Not used for UI)
+        
+        [HttpPut("{id}")]
+        public IActionResult UpdateOrder(int id, [FromBody] OrderAdminModel model)
         {
-            if (body == null || string.IsNullOrWhiteSpace(body.Status))
-                return BadRequest(new { message = "Status cannot be empty." });
-
-            // Validate allowed statuses (optional but recommended)
-            var validStatuses = new[] { "Pending", "Processing", "Shipped", "Delivered", "Cancelled" };
-            if (!validStatuses.Contains(body.Status))
-                return BadRequest(new { message = "Invalid status value." });
+            if (id != model.OrderID)
+                return BadRequest(new { error = "OrderID mismatch." });
 
             try
             {
-                _dal.UpdateStatus(orderId, body.Status);
-                return Ok(new { message = "Order status updated successfully." });
+                _dal.Update(model);
+                return Ok(new { message = "Order updated successfully." });
             }
-            catch
+            catch (Exception ex)
             {
-                return NotFound(new { message = "Order not found." });
+                return BadRequest(new { error = ex.Message });
             }
         }
-    }
 
-    // Admin-specific DTO (avoids Swagger schema conflicts)
-    public class AdminOrderStatusUpdateRequest
-    {
-        public string Status { get; set; }
+        
+        // UPDATE STATUS ONLY   <--- NEW ENDPOINT
+        
+        [HttpPut("{id}/status")]
+        public IActionResult UpdateOrderStatus(int id, [FromBody] OrderAdminModel model)
+        {
+            if (model == null || string.IsNullOrWhiteSpace(model.Status))
+                return BadRequest(new { error = "Status value is required." });
+
+            try
+            {
+                _dal.UpdateStatus(id, model.Status);
+                return Ok(new { message = "Order status updated." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        
+        // DELETE ORDER
+        
+        [HttpDelete("{id}")]
+        public IActionResult DeleteOrder(int id)
+        {
+            try
+            {
+                _dal.Delete(id);
+                return Ok(new { message = "Order deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
     }
 }

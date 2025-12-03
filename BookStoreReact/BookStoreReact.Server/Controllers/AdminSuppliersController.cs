@@ -15,55 +15,54 @@ namespace BookStoreReact.Server.Controllers
             _dal = new DALSupplier(config);
         }
 
-        // GET: /api/admin/suppliers
         [HttpGet]
         public IActionResult GetSuppliers()
         {
-            var suppliers = _dal.GetAll();
-            return Ok(suppliers);
+            return Ok(_dal.GetAll());
         }
 
-        // POST: /api/admin/suppliers
         [HttpPost]
         public IActionResult AddSupplier([FromBody] SupplierModel model)
         {
-            if (model == null || string.IsNullOrWhiteSpace(model.Name))
-                return BadRequest(new { message = "Supplier name cannot be empty." });
-
-            _dal.Add(model);
-            return Ok(new { message = "Supplier added successfully." });
+            try
+            {
+                _dal.Add(model);
+                return Ok(new { message = "Supplier added successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
-        // PUT: /api/admin/suppliers/{id}
         [HttpPut("{id}")]
         public IActionResult UpdateSupplier(int id, [FromBody] SupplierModel model)
         {
-            if (model == null || string.IsNullOrWhiteSpace(model.Name))
-                return BadRequest(new { message = "Supplier name cannot be empty." });
+            if (id != model.SupplierID)
+                return BadRequest(new { error = "SupplierID mismatch." });
 
             try
             {
-                _dal.Update(id, model);
+                _dal.Update(model);
                 return Ok(new { message = "Supplier updated successfully." });
             }
-            catch
+            catch (Exception ex)
             {
-                return NotFound(new { message = "Supplier not found." });
+                return BadRequest(new { error = ex.Message });
             }
         }
 
-        // DELETE: /api/admin/suppliers/{id}
         [HttpDelete("{id}")]
         public IActionResult DeleteSupplier(int id)
         {
             try
             {
                 _dal.Delete(id);
-                return Ok(new { message = "Supplier deleted successfully." });
+                return Ok(new { message = "Supplier deleted." });
             }
-            catch
+            catch (Exception ex)
             {
-                return NotFound(new { message = "Supplier not found." });
+                return BadRequest(new { error = ex.Message });
             }
         }
     }
