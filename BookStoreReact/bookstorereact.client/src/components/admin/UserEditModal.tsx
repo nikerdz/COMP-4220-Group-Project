@@ -1,6 +1,14 @@
 ﻿import { useState } from "react";
 import { API_BASE } from "../../api";
-import type { User } from "../../User";
+
+interface User {
+    UserID: number;
+    UserName: string;
+    FullName: string | null;
+    Email: string | null;
+    Type: string;
+    Manager: boolean;
+}
 
 interface UserEditModalProps {
     user: User;
@@ -8,20 +16,14 @@ interface UserEditModalProps {
     reload: () => void;
 }
 
-interface EditForm {
-    fullName: string | null;
-    email: string | null;
-    type: "CU" | "AD";
-    manager: boolean;
-}
-
 export default function UserEditModal({ user, onClose, reload }: UserEditModalProps) {
-
-    const [form, setForm] = useState<EditForm>({
-        fullName: user.fullName,
-        email: user.email,
-        type: user.type,
-        manager: user.manager,
+    const [form, setForm] = useState({
+        UserID: user.UserID,
+        UserName: user.UserName,
+        FullName: user.FullName ?? "",
+        Email: user.Email ?? "",
+        Type: user.Type,
+        Manager: user.Manager
     });
 
     const handleChange = (
@@ -29,26 +31,35 @@ export default function UserEditModal({ user, onClose, reload }: UserEditModalPr
     ) => {
         const { name, value, type } = e.target;
 
-        const updatedValue =
-            type === "checkbox"
-                ? (e.target as HTMLInputElement).checked
-                : value;
-
-        setForm(prev => ({
-            ...prev,
-            [name]: updatedValue
-        }));
+        if (type === "checkbox") {
+            const checkbox = e.target as HTMLInputElement;
+            setForm(prev => ({ ...prev, [name]: checkbox.checked }));
+        } else {
+            setForm(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleSave = async () => {
-        await fetch(`${API_BASE}/api/admin/users/${user.userId}`, {
+        const payload = {
+            UserID: form.UserID,
+            UserName: form.UserName,
+            FullName: form.FullName || null,
+            Email: form.Email || null,
+            Type: form.Type,
+            Manager: form.Manager
+        };
+
+        const res = await fetch(`${API_BASE}/api/admin/users/${form.UserID}`, {
             method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("token")}`
-            },
-            body: JSON.stringify(form),
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
         });
+
+        if (!res.ok) {
+            const msg = await res.text();
+            alert("Failed to update user: " + msg);
+            return;
+        }
 
         reload();
         onClose();
@@ -57,44 +68,41 @@ export default function UserEditModal({ user, onClose, reload }: UserEditModalPr
     return (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
             <div className="bg-white p-6 w-96 rounded shadow">
+
                 <h2 className="text-xl font-bold mb-4">Edit User</h2>
 
-                <p className="text-sm mb-2 text-gray-500">Username: {user.userName}</p>
+                <input
+                    className="input mb-2 w-full"
+                    name="UserName"
+                    value={form.UserName}
+                    onChange={handleChange}
+                    placeholder="Username"
+                />
 
                 <input
-                    name="fullName"
                     className="input mb-2 w-full"
-                    value={form.fullName ?? ""}
+                    name="FullName"
+                    value={form.FullName}
                     onChange={handleChange}
                     placeholder="Full Name"
                 />
 
                 <input
-                    name="email"
                     className="input mb-2 w-full"
-                    value={form.email ?? ""}
+                    name="Email"
+                    value={form.Email}
                     onChange={handleChange}
                     placeholder="Email"
                 />
 
-                <select
-                    name="type"
-                    className="input mb-2 w-full"
-                    value={form.type}
-                    onChange={handleChange}
-                >
-                    <option value="CU">Customer</option>
-                    <option value="AD">Admin</option>
-                </select>
-
                 <label className="flex items-center gap-2 mb-4">
                     <input
                         type="checkbox"
-                        name="manager"
-                        checked={form.manager}
+                        name="Manager"
+                        checked={form.Manager}
                         onChange={handleChange}
                     />
-                    <span>Manager</span>
+                    <span>Manager Access</span>
                 </label>
 
                 <div className="flex justify-end gap-2">
@@ -109,9 +117,10 @@ export default function UserEditModal({ user, onClose, reload }: UserEditModalPr
                         onClick={handleSave}
                         className="px-4 py-2 bg-blue-600 text-white rounded"
                     >
-                        Update
+                        Save
                     </button>
                 </div>
+
             </div>
         </div>
     );

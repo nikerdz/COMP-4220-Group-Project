@@ -1,29 +1,28 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { API_BASE } from "../../api";
-import type { Book } from "../../pages/AdminInventory";
 
 interface Category {
-    categoryId: number;
-    name: string;
+    CategoryID: number;
+    Name: string;
 }
 
 interface Supplier {
-    supplierId: number;
-    name: string;
+    SupplierID: number;
+    Name: string;
 }
 
-interface AddBookModalProps {
+interface Props {
     onClose: () => void;
     reload: () => void;
 }
 
-export default function AddBookModal({ onClose, reload }: AddBookModalProps) {
+export default function AddBookModal({ onClose, reload }: Props) {
     const [categories, setCategories] = useState<Category[]>([]);
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
 
     const [form, setForm] = useState({
         isbn: "",
-        categoryId: "",
+        categoryID: "",
         supplierId: "",
         title: "",
         author: "",
@@ -34,61 +33,50 @@ export default function AddBookModal({ onClose, reload }: AddBookModalProps) {
         inStock: "",
     });
 
-    // Load dropdown lists
     useEffect(() => {
         async function loadLists() {
-            try {
-                const catRes = await fetch(`${API_BASE}/api/admin/categories`);
-                const supRes = await fetch(`${API_BASE}/api/admin/suppliers`);
+            const cat = await (await fetch(`${API_BASE}/api/admin/categories`)).json();
+            const sup = await (await fetch(`${API_BASE}/api/admin/suppliers`)).json();
 
-                setCategories(await catRes.json());
-                setSuppliers(await supRes.json());
-            } catch (err) {
-                console.error("Failed to load dropdown lists:", err);
-            }
+            // 🔥 Normalize casing so frontend works
+            setCategories(cat);
+            setSuppliers(
+                sup.map((s: any) => ({
+                    SupplierID: s.SupplierID,
+                    Name: s.Name,
+                }))
+            );
         }
         loadLists();
     }, []);
 
-    // Handle input changes
-    const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-    ) => {
-        const { name, value } = e.target;
-        setForm(prev => ({ ...prev, [name]: value }));
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
     const handleSave = async () => {
-        if (!form.isbn || !form.categoryId || !form.edition || !form.inStock) {
-            alert("Please fill all required fields (ISBN, Category, Edition, Stock).");
-            return;
-        }
-
-        // Convert to the FULL Book object type expected by backend
-        const payload: Partial<Book> = {
+        const payload = {
             isbn: form.isbn,
-            categoryId: Number(form.categoryId),
-            supplierId: form.supplierId === "" ? null : Number(form.supplierId),
+            categoryID: Number(form.categoryID),
+            supplierId: form.supplierId ? Number(form.supplierId) : null,
             title: form.title,
             author: form.author,
             price: Number(form.price),
-            year: form.year || null,
+            year: form.year,
             edition: form.edition,
-            publisher: form.publisher || null,
+            publisher: form.publisher,
             inStock: Number(form.inStock),
         };
 
         const res = await fetch(`${API_BASE}/api/admin/books`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("token")}`
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
         });
 
         if (!res.ok) {
-            alert("Failed to add book.");
+            const err = await res.json();
+            alert("Failed to add book: " + err.error);
             return;
         }
 
@@ -97,75 +85,51 @@ export default function AddBookModal({ onClose, reload }: AddBookModalProps) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
-            <div className="bg-white p-6 w-96 rounded shadow">
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
+            <div className="bg-white p-6 rounded shadow w-96">
                 <h2 className="text-xl font-bold mb-4">Add Book</h2>
 
-                <input
-                    name="isbn"
-                    placeholder="ISBN"
-                    className="input mb-2 w-full"
-                    onChange={handleChange}
-                />
+                <input name="isbn" placeholder="ISBN (10 chars)" className="input mb-2 w-full"
+                    onChange={handleChange} value={form.isbn} />
 
-                <select
-                    name="categoryId"
-                    className="input mb-2 w-full"
-                    value={form.categoryId}
-                    onChange={handleChange}
-                >
+                <select name="categoryID" className="input mb-2 w-full" onChange={handleChange} value={form.categoryID}>
                     <option value="">Select Category</option>
                     {categories.map(c => (
-                        <option key={c.categoryId} value={c.categoryId}>
-                            {c.name}
-                        </option>
+                        <option key={c.CategoryID} value={c.CategoryID}>{c.Name}</option>
                     ))}
                 </select>
 
-                <select
-                    name="supplierId"
-                    className="input mb-2 w-full"
-                    value={form.supplierId}
-                    onChange={handleChange}
-                >
+                <select name="supplierId" className="input mb-2 w-full" onChange={handleChange} value={form.supplierId}>
                     <option value="">Select Supplier</option>
                     {suppliers.map(s => (
-                        <option key={s.supplierId} value={s.supplierId}>
-                            {s.name}
-                        </option>
+                        <option key={s.SupplierID} value={s.SupplierID}>{s.Name}</option>
                     ))}
                 </select>
 
-                <input name="title" className="input mb-2 w-full" placeholder="Title" onChange={handleChange} />
-                <input name="author" className="input mb-2 w-full" placeholder="Author" onChange={handleChange} />
+                <input name="title" className="input mb-2 w-full" placeholder="Title"
+                    onChange={handleChange} value={form.title} />
 
-                <input
-                    name="price"
-                    type="number"
-                    className="input mb-2 w-full"
-                    placeholder="Price"
-                    onChange={handleChange}
-                />
+                <input name="author" className="input mb-2 w-full" placeholder="Author"
+                    onChange={handleChange} value={form.author} />
 
-                <input name="year" className="input mb-2 w-full" placeholder="Year" onChange={handleChange} />
-                <input name="edition" className="input mb-2 w-full" placeholder="Edition" onChange={handleChange} />
-                <input name="publisher" className="input mb-2 w-full" placeholder="Publisher" onChange={handleChange} />
+                <input name="price" type="number" className="input mb-2 w-full" placeholder="Price"
+                    onChange={handleChange} value={form.price} />
 
-                <input
-                    name="inStock"
-                    type="number"
-                    className="input mb-4 w-full"
-                    placeholder="In Stock"
-                    onChange={handleChange}
-                />
+                <input name="year" className="input mb-2 w-full" placeholder="Year (4 chars)"
+                    onChange={handleChange} value={form.year} />
+
+                <input name="edition" className="input mb-2 w-full" placeholder="Edition (2 chars)"
+                    onChange={handleChange} value={form.edition} />
+
+                <input name="publisher" className="input mb-2 w-full" placeholder="Publisher"
+                    onChange={handleChange} value={form.publisher} />
+
+                <input name="inStock" type="number" className="input mb-4 w-full"
+                    placeholder="In Stock" onChange={handleChange} value={form.inStock} />
 
                 <div className="flex justify-end gap-2">
-                    <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">
-                        Cancel
-                    </button>
-                    <button onClick={handleSave} className="px-4 py-2 bg-green-600 text-white rounded">
-                        Save
-                    </button>
+                    <button className="px-4 py-2 bg-gray-300 rounded" onClick={onClose}>Cancel</button>
+                    <button className="px-4 py-2 bg-green-600 text-white rounded" onClick={handleSave}>Save</button>
                 </div>
             </div>
         </div>

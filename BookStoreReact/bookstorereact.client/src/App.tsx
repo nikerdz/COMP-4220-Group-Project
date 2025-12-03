@@ -5,7 +5,7 @@ import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Contact from "./pages/Contact";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminInventory from "./pages/AdminInventory";
@@ -15,8 +15,6 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminOrders from "./pages/AdminOrders";
 import AdminSuppliers from "./pages/AdminSuppliers";
 
-
-//NO HEADER PAGES BELOW IMPORT
 import NotFound from "./pages/NotFound";
 
 interface BookItem {
@@ -39,21 +37,38 @@ interface CartItem {
 export default function App() {
     const [cart, setCart] = useState<CartItem[]>([]);
 
+    // 🔥 AUTO LOGOUT ONLY WHEN TAB IS CLOSED (NOT REFRESHED)
+    useEffect(() => {
+        const handleVisibility = () => {
+            // Page becomes hidden AND the unload event is coming from tab close
+            if (document.visibilityState === "hidden") {
+                // Detect if navigation type is NOT "reload"
+                const perf = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming;
+
+                if (perf && perf.type !== "reload") {
+                    // Tab was closed → logout
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("user");
+                }
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibility);
+
+        return () => document.removeEventListener("visibilitychange", handleVisibility);
+    }, []);
+
     return (
         <Routes>
-
-            {/* ROUTES WITH HEADER */}
             <Route element={<MainLayout cart={cart} setCart={setCart} />}>
                 <Route path="/" element={<Home cart={cart} setCart={setCart} />} />
                 <Route path="/profile" element={<Profile cart={cart} setCart={setCart} />} />
                 <Route path="/contact" element={<Contact />} />
             </Route>
 
-            {/* ROUTES WITHOUT HEADER */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
-            {/* ADMIN ROUTES (ADMIN-ONLY LAYOUT) */}
             <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="inventory" element={<AdminInventory />} />
@@ -64,11 +79,7 @@ export default function App() {
                 <Route path="suppliers" element={<AdminSuppliers />} />
             </Route>
 
-
-            {/* FALLBACK */}
             <Route path="*" element={<NotFound />} />
-
         </Routes>
     );
-
 }

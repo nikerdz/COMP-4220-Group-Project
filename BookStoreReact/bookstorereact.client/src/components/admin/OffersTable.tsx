@@ -1,30 +1,25 @@
 ﻿import { API_BASE } from "../../api";
+import type { Offer } from "../../pages/AdminOffers";
 
-interface Offer {
-    offerId: number;
-    code: string;
-    description: string | null;
-    discountPercent: number;
-    active: boolean;
-    expiryDate: string | null;
-}
-
-
-interface OffersTableProps {
+interface OfferTableProps {
     offers: Offer[];
     reload: () => void;
-    setEditOffer: (offer: Offer) => void;
+    setEditOffer: (o: Offer | null) => void;
 }
 
-export default function OffersTable({ offers, reload, setEditOffer }: OffersTableProps) {
+export default function OffersTable({ offers, reload, setEditOffer }: OfferTableProps) {
 
     const handleDelete = async (id: number) => {
         if (!confirm("Delete this offer?")) return;
 
-        await fetch(`${API_BASE}/api/admin/offers/${id}`, {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        const res = await fetch(`${API_BASE}/api/admin/offers/${id}`, {
+            method: "DELETE"
         });
+
+        if (!res.ok) {
+            alert("Failed to delete offer");
+            return;
+        }
 
         reload();
     };
@@ -35,33 +30,41 @@ export default function OffersTable({ offers, reload, setEditOffer }: OffersTabl
                 <tr>
                     <th className="p-2 text-left">ID</th>
                     <th className="p-2 text-left">Code</th>
-                    <th className="p-2 text-left">Discount %</th>
+                    <th className="p-2 text-left">Description</th>
+                    <th className="p-2 text-left">Discount</th>
+                    <th className="p-2 text-left">Usage Limit</th>
+                    <th className="p-2 text-left">Times Used</th>
+                    <th className="p-2 text-left">Start</th>
+                    <th className="p-2 text-left">End</th>
                     <th className="p-2 text-left">Active</th>
-                    <th className="p-2 text-left">Expiry</th>
                     <th className="p-2 text-left">Actions</th>
                 </tr>
             </thead>
 
             <tbody>
-                {offers.map((o) => (
-                    <tr key={o.offerId} className="border-t">
-                        <td className="p-2">{o.offerId}</td>
-                        <td className="p-2">{o.code}</td>
-                        <td className="p-2">{o.discountPercent}%</td>
-                        <td className="p-2">{o.active ? "✔" : "✖"}</td>
-                        <td className="p-2">{o.expiryDate ?? "None"}</td>
+                {offers.map(o => (
+                    <tr key={o.CouponID} className="border-t">
+                        <td className="p-2">{o.CouponID}</td>
+                        <td className="p-2">{o.Code}</td>
+                        <td className="p-2">{o.Description ?? "—"}</td>
+                        <td className="p-2">{o.DiscountRate}%</td>
+                        <td className="p-2">{o.UsageLimit ?? "∞"}</td>
+                        <td className="p-2">{o.TimesUsed}</td>
+                        <td className="p-2">{o.StartDate?.substring(0, 10) ?? "—"}</td>
+                        <td className="p-2">{o.EndDate?.substring(0, 10) ?? "—"}</td>
+                        <td className="p-2">{o.IsActive ? "Yes" : "No"}</td>
 
                         <td className="p-2 flex gap-2">
                             <button
                                 onClick={() => setEditOffer(o)}
-                                className="px-3 py-1 bg-blue-600 text-white rounded"
+                                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
                             >
                                 Edit
                             </button>
 
                             <button
-                                onClick={() => handleDelete(o.offerId)}
-                                className="px-3 py-1 bg-red-600 text-white rounded"
+                                onClick={() => handleDelete(o.CouponID)}
+                                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
                             >
                                 Delete
                             </button>

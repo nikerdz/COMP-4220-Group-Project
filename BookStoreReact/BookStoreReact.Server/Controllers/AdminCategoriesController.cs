@@ -15,58 +15,65 @@ namespace BookStoreReact.Server.Controllers
             _dal = new DALCategory(config);
         }
 
-
-        // GET ALL CATEGORIES
-
+        // GET: api/admin/categories
         [HttpGet]
         public IActionResult GetCategories()
         {
             return Ok(_dal.GetAll());
         }
 
-
-
-        // ADD NEW CATEGORY
-
+        // POST: api/admin/categories
         [HttpPost]
         public IActionResult AddCategory([FromBody] CategoryModel model)
         {
-            if (model == null || string.IsNullOrWhiteSpace(model.Name))
-                return BadRequest(new { message = "Category name is required." });
+            if (string.IsNullOrWhiteSpace(model.Name))
+                return BadRequest(new { error = "Category Name is required." });
 
-            _dal.Add(model);
-            return Ok(new { message = "Category added successfully." });
+            try
+            {
+                _dal.Add(model);
+                return Ok(new { message = "Category added successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
-
-
-        // UPDATE CATEGORY
-
+        // PUT: api/admin/categories/{id}
         [HttpPut("{id}")]
         public IActionResult UpdateCategory(int id, [FromBody] CategoryModel model)
         {
-            if (id <= 0)
-                return BadRequest(new { message = "Invalid Category ID." });
+            if (id != model.CategoryID)
+                return BadRequest(new { error = "CategoryID mismatch." });
 
-            if (model == null || string.IsNullOrWhiteSpace(model.Name))
-                return BadRequest(new { message = "Category name is required." });
+            if (string.IsNullOrWhiteSpace(model.Name))
+                return BadRequest(new { error = "Category Name is required." });
 
-            _dal.Update(id, model);
-            return Ok(new { message = "Category updated successfully." });
+            try
+            {
+                _dal.Update(model);
+                return Ok(new { message = "Category updated successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
-
-
-        // DELETE CATEGORY
-
+        // DELETE: api/admin/categories/{id}
         [HttpDelete("{id}")]
         public IActionResult DeleteCategory(int id)
         {
-            if (id <= 0)
-                return BadRequest(new { message = "Invalid Category ID." });
-
-            _dal.Delete(id);
-            return Ok(new { message = "Category deleted successfully." });
+            try
+            {
+                _dal.Delete(id);
+                return Ok(new { message = "Category deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
     }
 }

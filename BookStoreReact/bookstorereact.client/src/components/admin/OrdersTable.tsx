@@ -1,86 +1,95 @@
 import { API_BASE } from "../../api";
+import type { Order } from "../../pages/AdminOrders";
 
-export interface Order {
-    orderId: number;
-    userId: number;
-    userName: string;
-    orderDate: string;
-    totalAmount: number;
-    status: string;
-}
-
-interface OrdersTableProps {
+interface Props {
     orders: Order[];
     reload: () => void;
-    setSelectedOrder: (order: Order) => void;
+    setEditOrder: (o: Order | null) => void;
 }
 
-export default function OrdersTable({
-    orders,
-    reload,
-    setSelectedOrder
-}: OrdersTableProps) {
+export default function OrdersTable({ orders, reload, setEditOrder }: Props) {
 
-    const updateStatus = async (orderId: number, newStatus: string) => {
-        await fetch(`${API_BASE}/api/admin/orders/${orderId}/status`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("token")}`
-            },
-            body: JSON.stringify({ status: newStatus })
+    const handleDelete = async (id: number) => {
+        if (!confirm("Delete this order?")) return;
+
+        await fetch(`${API_BASE}/api/admin/orders/${id}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" }
         });
 
         reload();
     };
 
     return (
-        <table className="w-full bg-white shadow border border-gray-200 rounded">
-            <thead className="bg-gray-100">
-                <tr>
-                    <th className="p-2 text-left">Order ID</th>
-                    <th className="p-2 text-left">User Name</th>
-                    <th className="p-2 text-left">Order Date</th>
-                    <th className="p-2 text-left">Total</th>
-                    <th className="p-2 text-left">Status</th>
-                    <th className="p-2 text-left">Actions</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                {orders.map((order) => (
-                    <tr key={order.orderId} className="border-t">
-                        <td className="p-2">{order.orderId}</td>
-                        <td className="p-2">{order.userName}</td>
-                        <td className="p-2">{order.orderDate}</td>
-                        <td className="p-2">${order.totalAmount.toFixed(2)}</td>
-
-                        <td className="p-2">
-                            <select
-                                value={order.status}
-                                onChange={(e) =>
-                                    updateStatus(order.orderId, e.target.value)
-                                }
-                                className="border rounded px-2 py-1"
-                            >
-                                <option value="Pending">Pending</option>
-                                <option value="Processing">Processing</option>
-                                <option value="Completed">Completed</option>
-                                <option value="Cancelled">Cancelled</option>
-                            </select>
-                        </td>
-
-                        <td className="p-2">
-                            <button
-                                onClick={() => setSelectedOrder(order)}
-                                className="px-3 py-1 bg-blue-600 text-white rounded"
-                            >
-                                View Items
-                            </button>
-                        </td>
+        <div className="overflow-x-auto rounded-lg shadow border bg-white">
+            <table className="w-full table-auto border-collapse">
+                <thead className="bg-gray-100 text-gray-700 font-semibold">
+                    <tr>
+                        <th className="p-3 text-left w-24">Order ID</th>
+                        <th className="p-3 text-left w-24">User ID</th>
+                        <th className="p-3 text-left w-32">Date</th>
+                        <th className="p-3 text-left w-32">Amount</th>
+                        <th className="p-3 text-left w-32">Status</th>
+                        <th className="p-3 text-left w-40">Actions</th>
                     </tr>
-                ))}
-            </tbody>
-        </table>
+                </thead>
+
+                <tbody>
+                    {orders.map((o) => (
+                        <tr
+                            key={o.OrderID}
+                            className="border-t hover:bg-gray-50 transition"
+                        >
+                            <td className="p-3">{o.OrderID}</td>
+
+                            <td className="p-3">{o.UserID}</td>
+
+                            <td className="p-3">
+                                {new Date(o.OrderDate).toLocaleDateString()}
+                            </td>
+
+                            <td className="p-3">
+                                ${Number(o.TotalAmount).toFixed(2)}
+                            </td>
+
+                            <td className="p-3">
+                                <span
+                                    className={
+                                        "px-3 py-1 rounded-full text-sm font-medium " +
+                                        (o.Status === "Pending"
+                                            ? "bg-yellow-100 text-yellow-700"
+                                            : o.Status === "Processing"
+                                                ? "bg-blue-100 text-blue-700"
+                                                : o.Status === "Completed"
+                                                    ? "bg-green-100 text-green-700"
+                                                    : "bg-red-100 text-red-700")
+                                    }
+                                >
+                                    {o.Status}
+                                </span>
+                            </td>
+
+                            <td className="p-3">
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setEditOrder(o)}
+                                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                                    >
+                                        Update Status
+                                    </button>
+
+                                    <button
+                                        onClick={() => handleDelete(o.OrderID)}
+                                        className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
     );
 }

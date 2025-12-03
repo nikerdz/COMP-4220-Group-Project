@@ -5,18 +5,22 @@ using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1) Add controllers
-builder.Services.AddControllers();
+// 1) Add controllers with PascalCase JSON
+builder.Services.AddControllers()
+    .AddJsonOptions(opts =>
+    {
+        opts.JsonSerializerOptions.PropertyNamingPolicy = null;
+        opts.JsonSerializerOptions.DictionaryKeyPolicy = null;
+    });
 
-// 2) Add CORS so React can call the API
+// 2) CORS for React
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowClient", policy =>
     {
-        policy
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowAnyOrigin();  // Dev-friendly
+        policy.AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowAnyOrigin();
     });
 });
 
@@ -26,21 +30,20 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// 4) Swagger only in Development
+// 4) Swagger in Development
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
 // 5) HTTPS + Routing + CORS
 app.UseHttpsRedirection();
-
 app.UseCors("AllowClient");
-
 app.UseAuthorization();
 
-// 6) Map all API controllers
+// 6) Map API Controllers
 app.MapControllers();
 
 app.Run();

@@ -1,37 +1,40 @@
-import { API_BASE } from "../../api";
 import type { Book } from "../../pages/AdminInventory";
+import { API_BASE } from "../../api";
 
-interface InventoryTableProps {
+interface Props {
     books: Book[];
     reload: () => void;
     setEditBook: (b: Book) => void;
 }
 
-export default function InventoryTable({ books, reload, setEditBook }: InventoryTableProps) {
+export default function InventoryTable({ books, reload, setEditBook }: Props) {
+
     const handleDelete = async (isbn: string) => {
         if (!confirm("Delete this book?")) return;
 
-        await fetch(`${API_BASE}/api/admin/books/${isbn}`, {
+        const res = await fetch(`${API_BASE}/api/admin/books/${isbn}`, {
             method: "DELETE",
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`
-            }
         });
+
+        if (!res.ok) {
+            alert("Failed to delete book.");
+            return;
+        }
 
         reload();
     };
 
     return (
-        <table className="w-full bg-white shadow border border-gray-200 rounded">
+        <table className="table-auto w-full border-collapse">
             <thead className="bg-gray-100">
                 <tr>
-                    <th className="p-2 text-left">ISBN</th>
-                    <th className="p-2 text-left">Title</th>
-                    <th className="p-2 text-left">Author</th>
-                    <th className="p-2 text-left">Price</th>
-                    <th className="p-2 text-left">Stock</th>
-                    <th className="p-2 text-left">Supplier</th>
-                    <th className="p-2 text-left">Actions</th>
+                    <th className="px-4 py-2 text-left w-[140px]">ISBN</th>
+                    <th className="px-4 py-2 text-left w-[250px]">Title</th>
+                    <th className="px-4 py-2 text-left w-[200px]">Author</th>
+                    <th className="px-4 py-2 text-left w-[100px]">Price</th>
+                    <th className="px-4 py-2 text-left w-[100px]">Stock</th>
+                    <th className="px-4 py-2 text-left w-[180px]">Supplier</th>
+                    <th className="px-4 py-2 text-left w-[180px]">Actions</th>
                 </tr>
             </thead>
 
