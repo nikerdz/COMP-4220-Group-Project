@@ -56,7 +56,7 @@ export default function OutOfStock({
         categoryColors[category] || categoryColors.Default;
 
     return (
-        <section className="bg-white py-8 px-6">
+        <section className="bg-white dark:bg-slate-900 py-8 px-6 transition-colors">
             <div className="max-w-6xl mx-auto">
 
                 {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
@@ -65,7 +65,7 @@ export default function OutOfStock({
                     {books.map((book) => (
                         <article
                             key={book.id}
-                            className="bg-white/90 rounded-2xl shadow-md overflow-hidden flex flex-col hover:shadow-lg transition-shadow cursor-pointer"
+                            className="bg-white/90 dark:bg-slate-800 rounded-2xl shadow-md overflow-hidden flex flex-col hover:shadow-lg transition-all cursor-pointer"
                         >
                             <div className="aspect-[3/4] w-full bg-[#f5f5f5] flex items-center justify-center">
                                 <img
@@ -82,20 +82,20 @@ export default function OutOfStock({
                                     Out of Stock
                                 </div>
 
-                                <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-2">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1 line-clamp-2">
                                     {book.title}
                                 </h3>
 
-                                <p className="text-sm text-gray-600 mb-2">
+                                <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
                                     by {book.author}
                                 </p>
 
-                                <p className="text-sm text-gray-500 line-clamp-3">
+                                <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-3">
                                     {book.shortDescription}
                                 </p>
 
                                 <div className="mt-auto flex items-center justify-between pt-3">
-                                    <div className="text-sm font-bold">
+                                    <div className="text-sm font-bold dark:text-gray-100">
                                         ${book.price.toFixed(2)}
                                     </div>
 

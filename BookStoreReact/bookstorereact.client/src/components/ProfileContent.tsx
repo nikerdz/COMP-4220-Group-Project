@@ -196,11 +196,11 @@ export default function ProfileContent({ activeSection, cart, setCart }: Profile
     if (activeSection === "info") {
         return (
             <div>
-                <h2 className="text-xl font-semibold text-black mb-2">
+                <h2 className="text-xl font-semibold text-black dark:text-gray-100 mb-2">
                     General Info
                 </h2>
                 {user ? (
-                    <div className="space-y-1 text-sm text-black">
+                    <div className="space-y-1 text-sm text-black dark:text-gray-300">
                         <p>
                             <span className="font-semibold">Username:</span>{" "}
                             {user.username}
@@ -219,7 +219,7 @@ export default function ProfileContent({ activeSection, cart, setCart }: Profile
                         </p>
                     </div>
                 ) : (
-                    <p className="text-sm text-black">
+                    <p className="text-sm text-black dark:text-gray-300">
                         No user is logged in.
                     </p>
                 )}
@@ -230,35 +230,35 @@ export default function ProfileContent({ activeSection, cart, setCart }: Profile
     // errors / loading / no user
     if (!user) {
         return (
-            <p className="text-sm text-black">
+            <p className="text-sm text-black dark:text-gray-300">
                 No user is logged in.
             </p>
         );
     }
 
     if (loading) {
-        return <p className="text-sm text-black">Loading...</p>;
+        return <p className="text-sm text-black dark:text-gray-300">Loading...</p>;
     }
 
     if (error) {
-        return <p className="text-sm text-red-600">{error}</p>;
+        return <p className="text-sm text-red-600 dark:text-red-400">{error}</p>;
     }
 
     // orders tab
     if (activeSection === "orders") {
         return (
             <div>
-                <h2 className="text-xl font-semibold text-black mb-2">
+                <h2 className="text-xl font-semibold text-black dark:text-gray-100 mb-2">
                     Order History
                 </h2>
                 {orders.length === 0 ? (
-                    <p className="text-sm text-black">
+                    <p className="text-sm text-black dark:text-gray-300">
                         You do not have any orders yet.
                     </p>
                 ) : (
-                    <ul className="space-y-2 text-sm text-black">
+                    <ul className="space-y-2 text-sm text-black dark:text-gray-300">
                         {orders.map((order) => (
-                            <li key={order.orderId} className="border-b pb-1">
+                            <li key={order.orderId} className="border-b dark:border-slate-700 pb-1">
                                 <div>
                                     <span className="font-semibold">
                                         Order #
@@ -305,28 +305,28 @@ export default function ProfileContent({ activeSection, cart, setCart }: Profile
     // wishlist tab
     return (
         <div>
-            <h2 className="text-xl font-semibold text-black mb-2">
+            <h2 className="text-xl font-semibold text-black dark:text-gray-100 mb-2">
                 Wishlist
             </h2>
             {wishlist.length === 0 ? (
-                <p className="text-sm text-black">
+                <p className="text-sm text-black dark:text-gray-300">
                     Your wishlist is empty.
                 </p>
             ) : (
-                <ul className="space-y-2 text-sm text-black">
+                <ul className="space-y-2 text-sm text-black dark:text-gray-300">
                     {wishlist.map((item) => (
-                        <li key={item.wishlistID} className="border-b pb-1">
+                        <li key={item.wishlistID} className="border-b dark:border-slate-700 pb-1">
                             <div className="font-semibold">{item.title}</div>
                             <div>by {item.author}</div>
                             <div>ISBN: {item.isbn}</div>
                             <div>Price: ${item.price.toFixed(2)}</div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
                                 Added on{" "}
                                 {new Date(item.dateAdded).toLocaleDateString()}
                             </div>
                             <button
                                 onClick={() => moveToCart(item)}
-                                className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded-md text-xs"
+                                className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded-md text-xs mt-2"
                             >
                                 Move to Cart
                             </button>

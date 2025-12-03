@@ -34,7 +34,7 @@ export default function Profile({ cart, setCart }: ProfileProps) {
         <div className="min-h-screen flex items-center px-16 py-10">
             {/* left side bar */}
             <aside className="w-48 flex flex-col justify-center">
-                <h1 className="text-2xl font-bold text-black mb-8">
+                <h1 className="text-2xl font-bold text-black dark:text-gray-100 mb-8">
                     Profile
                 </h1>
 
@@ -58,7 +58,7 @@ export default function Profile({ cart, setCart }: ProfileProps) {
             </aside>
 
             {/* middle content */}
-            <div className="h-64 border-l mx-8" />
+            <div className="h-64 border-l dark:border-slate-700 mx-8" />
             <main className="flex-1 flex justify-center">
                 <div className="max-w-xl w-full">
                     <ProfileContent
@@ -84,7 +84,7 @@ function SidebarButton({ label, isActive, onClick }: SidebarButtonProps) {
             type="button"
             onClick={onClick}
             className={`block w-full text-left py-1 text-sm ${isActive ? "font-semibold underline" : "font-normal hover:underline"
-                } text-black`}
+                } text-black dark:text-gray-300 dark:hover:text-white`}
         >
             {label}
         </button>

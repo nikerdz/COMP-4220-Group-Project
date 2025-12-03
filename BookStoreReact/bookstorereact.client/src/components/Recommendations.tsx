@@ -5,6 +5,7 @@ import {
     type BackendBook,
     categoryColors,
 } from "./booksMapper";
+import BookOverlay from "./BookOverlay";
 
 type CartItem = {
     book: BookItem;
@@ -88,7 +89,7 @@ export default function Recommendations({
     // When there are no books, still render so error messages are visible to tests / users
     if (!books || books.length === 0) {
         return (
-            <section className="bg-white py-8 px-6">
+            <section className="bg-white dark:bg-slate-900 py-8 px-6 transition-colors">
                 <div className="max-w-6xl mx-auto">
                     {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
                 </div>
@@ -122,7 +123,7 @@ export default function Recommendations({
         const recs = shuffled.slice(0, maxItems);
 
         return (
-            <section className="bg-white py-8 px-6">
+            <section className="bg-white dark:bg-slate-900 py-8 px-6 transition-colors">
                 <div className="max-w-6xl mx-auto">
                     {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
 
@@ -130,7 +131,7 @@ export default function Recommendations({
                         {recs.map((book) => (
                             <article
                                 key={book.id}
-                                className="bg-white/90 rounded-2xl shadow-md overflow-hidden flex flex-col hover:shadow-lg transition-shadow cursor-pointer"
+                                className="bg-white/90 dark:bg-slate-800 rounded-2xl shadow-md overflow-hidden flex flex-col hover:shadow-lg transition-all cursor-pointer"
                                 onClick={() => setSelectedBook(book)}
                             >
                                 <div className="aspect-[3/4] w-full bg-[#f5f5f5] flex items-center justify-center">
@@ -150,18 +151,18 @@ export default function Recommendations({
                                         {book.category}
                                     </div>
 
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-2">
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1 line-clamp-2">
                                         {book.title}
                                     </h3>
-                                    <p className="text-sm text-gray-600 mb-2">
+                                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
                                         by {book.author}
                                     </p>
-                                    <p className="text-sm text-gray-500 line-clamp-3">
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-3">
                                         {book.shortDescription}
                                     </p>
 
                                     <div className="mt-auto flex items-center justify-between pt-3">
-                                        <div className="text-sm font-bold">
+                                        <div className="text-sm font-bold dark:text-gray-100">
                                             ${book.price.toFixed(2)}
                                         </div>
 
@@ -207,58 +208,12 @@ export default function Recommendations({
                     </div>
 
                     {selectedBook && (
-                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                            <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl">
-                                <div className="flex justify-between items-start mb-4">
-                                    <h3 className="text-2xl font-semibold text-gray-900">
-                                        {selectedBook.title}
-                                    </h3>
-                                    <button
-                                        className="text-gray-500 hover:text-gray-700"
-                                        onClick={() => setSelectedBook(null)}
-                                    >
-                                        ✕
-                                    </button>
-                                </div>
-                                <p className="text-sm text-gray-600 mb-2">
-                                    by {selectedBook.author} · {selectedBook.category}
-                                </p>
-                                <p className="text-gray-800 mb-4">
-                                    {selectedBook.description}
-                                </p>
-                                <img
-                                    src={selectedBook.imageUrl}
-                                    alt={selectedBook.title}
-                                    className="w-full rounded-lg"
-                                />
-                                <div className="flex items-center justify-between border-t pt-4">
-                                    <div>
-                                        <span className="text-2xl font-bold text-gray-900">
-                                            ${selectedBook.price.toFixed(2)}
-                                        </span>
-                                    </div>
-
-                                    <div className="flex gap-3">
-                                        <button
-                                            onClick={() => addSelectedToCart(selectedBook)}
-                                            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-                                        >
-                                            Add to Cart
-                                        </button>
-
-                                        <button
-                                            onClick={() => {
-                                                void addToWishlist(selectedBook!);
-                                            }}
-                                            className="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                                            aria-label="Add to wishlist"
-                                        >
-                                            ♥
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <BookOverlay
+                            book={selectedBook}
+                            onClose={() => setSelectedBook(null)}
+                            onAddToCart={addSelectedToCart}
+                            onAddToWishlist={(book) => void addToWishlist(book)}
+                        />
                     )}
                 </div>
             </section>
@@ -290,7 +245,7 @@ export default function Recommendations({
     if (recs.length === 0) return null;
 
     return (
-        <section className="bg-white py-8 px-6">
+        <section className="bg-white dark:bg-slate-900 py-8 px-6 transition-colors">
             <div className="max-w-6xl mx-auto">
                 {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
 
@@ -298,7 +253,7 @@ export default function Recommendations({
                     {recs.map((book) => (
                         <article
                             key={book.id}
-                            className="bg-white/90 rounded-2xl shadow-md overflow-hidden flex flex-col hover:shadow-lg transition-shadow cursor-pointer"
+                            className="bg-white/90 dark:bg-slate-800 rounded-2xl shadow-md overflow-hidden flex flex-col hover:shadow-lg transition-all cursor-pointer"
                             onClick={() => setSelectedBook(book)}
                         >
                             <div className="aspect-[3/4] w-full bg-[#f5f5f5] flex items-center justify-center">
@@ -312,14 +267,14 @@ export default function Recommendations({
                                 <div className="inline-flex px-2 py-1 rounded-full text-xs font-semibold mb-2 text-white bg-gray-700">
                                     {book.category}
                                 </div>
-                                <h3 className="text-sm font-semibold text-gray-900 mb-1 line-clamp-2">
+                                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1 line-clamp-2">
                                     {book.title}
                                 </h3>
-                                <p className="text-xs text-gray-600 mb-2">
+                                <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">
                                     by {book.author}
                                 </p>
                                 <div className="mt-auto flex items-center justify-between pt-3">
-                                    <div className="text-sm font-bold">
+                                    <div className="text-sm font-bold dark:text-gray-100">
                                         ${book.price.toFixed(2)}
                                     </div>
                                     <div className="flex items-center gap-3">
@@ -364,58 +319,12 @@ export default function Recommendations({
                 </div>
 
                 {selectedBook && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                        <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl">
-                            <div className="flex justify-between items-start mb-4">
-                                <h3 className="text-2xl font-semibold text-gray-900">
-                                    {selectedBook.title}
-                                </h3>
-                                <button
-                                    className="text-gray-500 hover:text-gray-700"
-                                    onClick={() => setSelectedBook(null)}
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                            <p className="text-sm text-gray-600 mb-2">
-                                by {selectedBook.author} · {selectedBook.category}
-                            </p>
-                            <p className="text-gray-800 mb-4">
-                                {selectedBook.description}
-                            </p>
-                            <img
-                                src={selectedBook.imageUrl}
-                                alt={selectedBook.title}
-                                className="w-full rounded-lg"
-                            />
-                            <div className="flex items-center justify-between border-t pt-4">
-                                <div>
-                                    <span className="text-2xl font-bold text-gray-900">
-                                        ${selectedBook.price.toFixed(2)}
-                                    </span>
-                                </div>
-
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => addSelectedToCart(selectedBook)}
-                                        className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-                                    >
-                                        Add to Cart
-                                    </button>
-
-                                    <button
-                                        onClick={() => {
-                                            void addToWishlist(selectedBook!);
-                                        }}
-                                        className="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                                        aria-label="Add to wishlist"
-                                    >
-                                        ♥
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <BookOverlay
+                        book={selectedBook}
+                        onClose={() => setSelectedBook(null)}
+                        onAddToCart={addSelectedToCart}
+                        onAddToWishlist={(book) => void addToWishlist(book)}
+                    />
                 )}
             </div>
         </section>

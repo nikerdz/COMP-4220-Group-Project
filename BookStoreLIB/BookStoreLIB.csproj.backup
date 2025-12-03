@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\packages\MSTest.TestAdapter.2.2.10\build\net46\MSTest.TestAdapter.props" Condition="Exists('..\packages\MSTest.TestAdapter.2.2.10\build\net46\MSTest.TestAdapter.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
@@ -186,66 +186,6 @@
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
-    <Reference Include="System.Text.RegularExpressions, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Text.RegularExpressions.4.3.1\lib\net463\System.Text.RegularExpressions.dll</HintPath>
-      <Private>True</Private>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Xml.ReaderWriter, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Xml.ReaderWriter.4.3.0\lib\net46\System.Xml.ReaderWriter.dll</HintPath>
-      <Private>True</Private>
-      <Private>True</Private>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AddInventoryTests.cs" />
-    <Compile Include="Book.cs" />
-    <Compile Include="Cart.cs" />
-    <Compile Include="CategoriesTests.cs" />
-    <Compile Include="Coupon.cs" />
-    <Compile Include="CouponDAL.cs" />
-    <Compile Include="CouponUnitTests.cs" />
-    <Compile Include="LIBDALOrder.cs" />
-    <Compile Include="DiscountDataTests.cs" />
-    <Compile Include="EditInventoryTests.cs" />
-    <Compile Include="OffersTests.cs" />
-    <Compile Include="LIBOrder.cs" />
-    <Compile Include="LIBOrderItem.cs" />
-    <Compile Include="LIBOrderUnitTests.cs" />
-    <Compile Include="PaymentUnitTests.cs" />
-    <Compile Include="PaymentRules.cs" />
-    <Compile Include="LogoutUnitTest.cs" />
-    <Compile Include="CheckoutWindowTesting.cs" />
-    <Compile Include="PreOrderTests.cs" />
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
-    <Compile Include="RegisterTests.cs" />
-    <Compile Include="CartSubtotalTesting.cs" />
-    <Compile Include="RemoveInventoryTests.cs" />
-    <Compile Include="SuppliersTests.cs" />
-    <Compile Include="UserData.cs" />
-    <Compile Include="DALUserInfo.cs" />
-    <Compile Include="LoginUnitTests.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Wishlist.cs" />
-    <Compile Include="WishlistDAL.cs" />
-    <Compile Include="WishlistUnitTests.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-    <None Include="packages.config" />
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include=".env" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

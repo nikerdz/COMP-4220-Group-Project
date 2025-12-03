@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using BookStoreReact.Server.Models;
 
 namespace BookStoreReact.Server.Data
@@ -180,9 +180,9 @@ namespace BookStoreReact.Server.Data
         /// <summary>
         /// Retrieves a specific order with all its items
         /// </summary>
-        public Order GetOrderDetails(int orderId)
+        public Order? GetOrderDetails(int orderId)
         {
-            Order order = null;
+            Order? order = null;
 
             using (var conn = new SqlConnection(ResolveConn()))
             {

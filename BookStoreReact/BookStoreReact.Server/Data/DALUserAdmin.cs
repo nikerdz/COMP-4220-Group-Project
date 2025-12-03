@@ -1,6 +1,9 @@
-﻿using System.Data.SqlClient;
+using BookStoreReact.Server.Models;      //  Correct model namespace
+using System;
+using System.Collections.Generic;
+using Microsoft.Data.SqlClient;
+using System.Data.SqlClient;
 using System.Data;
-using BookStoreReact.Server.Models;
 
 namespace BookStoreReact.Server.Data
 {

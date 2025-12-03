@@ -1,0 +1,10 @@
+﻿CREATE TABLE [dbo].[Cart] (
+    [CartID] INT IDENTITY(1,1) NOT NULL,
+    [UserID] INT NOT NULL,
+    [ISBN] CHAR(10) NOT NULL,
+    [Quantity] INT NOT NULL DEFAULT 1,
+    [Subtotal] DECIMAL(18, 2) NOT NULL DEFAULT 0.00,
+    PRIMARY KEY CLUSTERED ([CartID] ASC),
+    CONSTRAINT [FK_Cart_User] FOREIGN KEY ([UserID]) REFERENCES [dbo].[UserData] ([UserID]),
+    CONSTRAINT [FK_Cart_Book] FOREIGN KEY ([ISBN]) REFERENCES [dbo].[BookData] ([ISBN])
+);

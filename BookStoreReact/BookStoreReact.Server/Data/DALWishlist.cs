@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using BookStoreReact.Server.Models;
 using Microsoft.Extensions.Configuration;
 
@@ -62,7 +62,7 @@ namespace BookStoreReact.Server.Data
             return cmd.ExecuteNonQuery();
         }
 
-        // ⬇⬇⬇ CHANGE IS HERE
+        // ??? CHANGE IS HERE
         public List<WishlistModel> GetWishlist(int userId)
         {
             List<WishlistModel> list = new();

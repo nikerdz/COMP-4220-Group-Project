@@ -37,25 +37,41 @@ interface CartItem {
 export default function App() {
     const [cart, setCart] = useState<CartItem[]>([]);
 
-    // 🔥 AUTO LOGOUT ONLY WHEN TAB IS CLOSED (NOT REFRESHED)
     useEffect(() => {
-        const handleVisibility = () => {
-            // Page becomes hidden AND the unload event is coming from tab close
-            if (document.visibilityState === "hidden") {
-                // Detect if navigation type is NOT "reload"
-                const perf = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming;
+        const fetchCart = async () => {
+            try {
+                const userDataStr = localStorage.getItem("user");
+                if (!userDataStr) return;
 
-                if (perf && perf.type !== "reload") {
-                    // Tab was closed → logout
-                    localStorage.removeItem("token");
-                    localStorage.removeItem("user");
+                const user = JSON.parse(userDataStr);
+                if (!user || !user.userId) return;
+
+                const res = await fetch(`http://localhost:5187/api/cart/${user.userId}`);
+                if (res.ok) {
+                    const books = await res.json();
+                    // Map backend Book model to frontend CartItem
+                    const cartItems: CartItem[] = books.map((b: any) => ({
+                        book: {
+                            id: b.isbn,
+                            title: b.title,
+                            author: b.author,
+                            category: "Default",
+                            imageUrl: `/books/${b.title}.jpg`,
+                            shortDescription: "",
+                            description: "",
+                            price: b.price,
+                            inStock: b.inStock
+                        },
+                        quantity: b.quantity
+                    }));
+                    setCart(cartItems);
                 }
+            } catch (err) {
+                console.error("Failed to fetch cart:", err);
             }
         };
 
-        document.addEventListener("visibilitychange", handleVisibility);
-
-        return () => document.removeEventListener("visibilitychange", handleVisibility);
+        fetchCart();
     }, []);
 
     return (
