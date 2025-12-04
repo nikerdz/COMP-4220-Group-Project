@@ -124,6 +124,9 @@ export default function Home({ cart, setCart }: HomeProps) {
             <BooksSection cart={cart} setCart={setCart} />
 
             {/* Recommendations */}
+            <h2 className="text-3xl font-semibold text-gray-700 dark:text-gray-200 text-center bg-white dark:bg-slate-900 w-full py-4 transition-colors">
+                Recommendations
+            </h2>
             <Recommendations cart={cart} setCart={setCart} maxItems={4} />
 
             {/* Out of Stock */}
