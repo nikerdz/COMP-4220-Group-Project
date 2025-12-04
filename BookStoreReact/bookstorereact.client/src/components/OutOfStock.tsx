@@ -1,10 +1,11 @@
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+﻿import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import {
     mapBackendToBookItem,
     type BookItem,
     type BackendBook,
     categoryColors,
 } from "./booksMapper";
+import BookOverlay from "./BookOverlay";
 
 type CartItem = {
     book: BookItem;
@@ -26,6 +27,7 @@ export default function OutOfStock({
 }: OutOfStockProps) {
     const [books, setBooks] = useState<BookItem[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [selectedBook, setSelectedBook] = useState<BookItem | null>(null);
 
     useEffect(() => {
         const fetchBooks = async () => {
@@ -55,10 +57,48 @@ export default function OutOfStock({
     const getCategoryClass = (category: string) =>
         categoryColors[category] || categoryColors.Default;
 
+    const addToWishlist = async (book: BookItem) => {
+        if (!localStorage.getItem("user")) {
+            alert("You must log in first.");
+            return;
+        }
+
+        const user = JSON.parse(localStorage.getItem("user")!);
+
+        const res = await fetch("/api/wishlist/add", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: user.userId, ISBN: book.id }),
+        });
+
+        if (res.ok) {
+            alert("Added to wishlist!");
+        } else {
+            alert("Already in wishlist or failed.");
+        }
+    };
+
+    const handlePreOrderAdd = (book: BookItem) => {
+        // fire alert ONCE outside React state updates
+        setTimeout(() => alert("Pre-order added!"), 0);
+
+        if (addToCart) addToCart(book);
+        else if (setCart)
+            setCart((prev) => {
+                const existing = prev.find((i) => i.book.id === book.id);
+                if (existing)
+                    return prev.map((i) =>
+                        i.book.id === book.id
+                            ? { ...i, quantity: i.quantity + 1 }
+                            : i
+                    );
+                return [...prev, { book, quantity: 1 }];
+            });
+    };
+
     return (
         <section className="bg-white dark:bg-slate-900 py-8 px-6 transition-colors">
             <div className="max-w-6xl mx-auto">
-
                 {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
 
                 <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -66,6 +106,7 @@ export default function OutOfStock({
                         <article
                             key={book.id}
                             className="bg-white/90 dark:bg-slate-800 rounded-2xl shadow-md overflow-hidden flex flex-col hover:shadow-lg transition-all cursor-pointer"
+                            onClick={() => setSelectedBook(book)}
                         >
                             <div className="aspect-[3/4] w-full bg-[#f5f5f5] flex items-center justify-center">
                                 <img
@@ -99,35 +140,48 @@ export default function OutOfStock({
                                         ${book.price.toFixed(2)}
                                     </div>
 
-                                    <button
-                                        onClick={() => {
-                                            // fire alert ONCE outside React state updates
-                                            setTimeout(() => alert("Pre-order added!"), 0);
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handlePreOrderAdd(book);
+                                            }}
+                                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm"
+                                        >
+                                            Pre-Order
+                                        </button>
 
-                                            if (addToCart) addToCart(book);
-                                            else if (setCart)
-                                                setCart((prev) => {
-                                                    const existing = prev.find(
-                                                        (i) => i.book.id === book.id
-                                                    );
-                                                    if (existing)
-                                                        return prev.map((i) =>
-                                                            i.book.id === book.id
-                                                                ? { ...i, quantity: i.quantity + 1 }
-                                                                : i
-                                                        );
-                                                    return [...prev, { book, quantity: 1 }];
-                                                });
-                                        }}
-                                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm"
-                                    >
-                                        Pre-Order
-                                    </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                void addToWishlist(book);
+                                            }}
+                                            className="bg-pink-600 hover:bg-pink-700 text-white px-3 py-1 rounded-lg text-sm"
+                                            aria-label="Add to wishlist"
+                                        >
+                                            ♥
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </article>
                     ))}
                 </div>
+
+                {selectedBook && (
+                    <BookOverlay
+                        book={selectedBook}
+                        onClose={() => setSelectedBook(null)}
+                        onAddToCart={(b) => {
+                            // ensure we add as pre-order
+                            handlePreOrderAdd(b);
+                            setSelectedBook(null);
+                        }}
+                        onAddToWishlist={(b) => {
+                            void addToWishlist(b);
+                        }}
+                    />
+                )}
             </div>
         </section>
     );

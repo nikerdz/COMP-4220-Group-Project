@@ -13,6 +13,8 @@ export default function BookOverlay({
     onAddToCart,
     onAddToWishlist,
 }: BookOverlayProps) {
+    const primaryLabel = book.inStock === 0 ? "Pre-Order" : "Add to Cart";
+
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-xl transition-colors">
@@ -50,7 +52,7 @@ export default function BookOverlay({
                             onClick={() => onAddToCart(book)}
                             className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                         >
-                            Add to Cart
+                            {primaryLabel}
                         </button>
 
                         <button
