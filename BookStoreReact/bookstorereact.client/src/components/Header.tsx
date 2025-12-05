@@ -38,7 +38,7 @@ export default function Header({ cart, setCart }: HeaderProps) {
         <header className="w-full border-b bg-white dark:bg-slate-800 dark:border-slate-700 transition-colors">
             <div className="max-w-5xl mx-auto flex items-center justify-between p-3 gap-4">
                 <NavLink to="/" className="text-xl font-bold text-blue-700 dark:text-blue-400">
-                    BookStore
+                    BiblioCart
                 </NavLink>
                 <div className="flex items-center gap-3">
                     <nav className="flex gap-2">
