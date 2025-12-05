@@ -93,7 +93,7 @@ export default function Home({ cart, setCart }: HomeProps) {
 
                 <div className="relative z-10 text-white">
                     <h1 className="text-5xl font-bold mb-4 drop-shadow-lg">
-                        Welcome to BookStore{user ? `, ${displayName}` : ""}
+                        Welcome to BiblioCart{user ? `, ${displayName}` : ""}
                     </h1>
                     <p className="text-lg mb-6 text-gray-200">
                         {user ? "Continue your reading journey" : "Discover your next great read"}

@@ -225,9 +225,9 @@ describe("ProfileContent Component - White Box Testing", () => {
             // Act - Change section to wishlist
             rerender(<ProfileContent activeSection="wishlist" />);
 
-            // Assert - Should fetch wishlist now
+            // Assert - Should fetch wishlist now (component calls /api/wishlist)
             await waitFor(() => {
-                expect(global.fetch).toHaveBeenCalledWith("/api/test/wishlist/1");
+                expect(global.fetch).toHaveBeenCalledWith("/api/wishlist/1");
             });
         });
     });
