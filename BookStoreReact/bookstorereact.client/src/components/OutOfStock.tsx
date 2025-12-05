@@ -1,4 +1,5 @@
-﻿import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+﻿/* eslint-disable @typescript-eslint/no-unused-vars */
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import {
     mapBackendToBookItem,
     type BookItem,
