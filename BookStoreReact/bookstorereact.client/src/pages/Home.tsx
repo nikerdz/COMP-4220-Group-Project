@@ -1,4 +1,5 @@
-﻿import { useEffect, useState } from "react";
+﻿/* eslint-disable @typescript-eslint/no-unused-vars */
+import { useEffect, useState } from "react";
 import BooksSection from "../components/BooksSection";
 import Button from "../components/Button";
 import Recommendations from "../components/Recommendations";
