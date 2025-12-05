@@ -60,7 +60,8 @@ describe("Recommendations UI", () => {
  const addToCart = vi.fn();
  render(<Recommendations cart={[]} addToCart={addToCart} />);
 
- const addButton = await screen.findByRole("button", { name: /add/i });
+    // Button text is "Add to Cart" in the component, match full label
+    const addButton = await screen.findByRole("button", { name: /add to cart/i });
  fireEvent.click(addButton);
 
  expect(addToCart).toHaveBeenCalled();

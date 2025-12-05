@@ -1,6 +1,6 @@
 // src/pages/PaymentForm.test.tsx
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import PaymentForm from "./PaymentForm";
 import type { PaymentFormProps } from "./PaymentForm";
@@ -57,7 +57,7 @@ describe("PaymentForm", () => {
         expect(props.onSuccess).not.toHaveBeenCalled();
     });
 
-    it("calls onSuccess when all fields are valid and user confirms", () => {
+    it("calls onSuccess when all fields are valid and user confirms", async () => {
         const props = makeProps();
         render(<PaymentForm {...props} />);
 
@@ -81,10 +81,16 @@ describe("PaymentForm", () => {
             .spyOn(window, "confirm")
             .mockReturnValue(true);
 
+        // Mock successful backend response so onSuccess is called
+        // @ts-expect-error - mock global fetch
+        global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ orderId: 123 }) });
+
         const payButton = screen.getByRole("button", { name: /pay now/i });
         fireEvent.click(payButton);
 
         expect(confirmSpy).toHaveBeenCalled();
-        expect(props.onSuccess).toHaveBeenCalledTimes(1);
+        await waitFor(() => {
+            expect(props.onSuccess).toHaveBeenCalledTimes(1);
+        });
     });
 });
