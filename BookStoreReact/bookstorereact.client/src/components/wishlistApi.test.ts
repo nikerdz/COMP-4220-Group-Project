@@ -2,6 +2,7 @@ import {
     fetchWishlist,
     addToWishlist,
     removeFromWishlist,
+    moveToCart,
     type WishlistItem,
 } from "./wishlistApi";
 
@@ -128,4 +129,49 @@ describe("wishlistApi", () => {
             );
         });
     });
+
+    describe("duplicate prevention (server behavior)", () => {
+        it("treats backend 'duplicate' response as an error", async () => {
+            global.fetch.mockResolvedValueOnce({
+                ok: false,
+                status: 409,
+                json: async () => ({ message: "Duplicate entry" }),
+            });
+
+            await expect(addToWishlist(42, "111")).rejects.toThrow(
+                /duplicate/i
+            );
+        });
+    });
+
+    describe("moveToCart", () => {
+        it("sends POST to /api/wishlist/move and succeeds", async () => {
+            global.fetch.mockResolvedValueOnce({
+                ok: true,
+                json: async () => ({ message: "Moved" }),
+            });
+
+            await moveToCart(42, "111");
+
+            expect(global.fetch).toHaveBeenCalledWith(
+                "/api/wishlist/move",
+                expect.objectContaining({
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ userId: 42, isbn: "111" }),
+                })
+            );
+        });
+
+        it("throws error when backend fails Move-To-Cart", async () => {
+            global.fetch.mockResolvedValueOnce({
+                ok: false,
+                status: 400,
+                json: async () => ({ message: "Move failed" }),
+            });
+
+            await expect(moveToCart(42, "111")).rejects.toThrow(/move failed/i);
+        });
+    });
+
 });
