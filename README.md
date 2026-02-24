@@ -217,13 +217,6 @@ BiblioCart helped our team practice:
 
 ---
 
-## 📜 License
-
-This project was created for educational purposes as part of a university course project.  
-Add a license here if the team decides to make the repository open-source (e.g., MIT License).
-
----
-
 ## 🙌 Acknowledgements
 
 Built as part of the COMP-4220: Agile Software Development course,
