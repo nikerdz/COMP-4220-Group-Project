@@ -187,6 +187,7 @@ Team Members & Roles:
 - Anika Khan: Scrum Master, Tester/Developer
 - Raad Islam: Product Owner, Tester/Developer
 - Nadia Malaq: Tester/Developer, SCRUM Advisor
+- Landon Hadre: Tester/Developer, React Lead/Mentor
 - Hadiyah Arif: Tester/Developer
 - Faria Islam: Tester/Developer
 - Jackie Li: Tester/Developer
@@ -219,6 +220,6 @@ BiblioCart helped our team practice:
 
 ## 🙌 Acknowledgements
 
-Built as part of the COMP-4220: Agile Software Development course,
-Dr. Xiaobu Yuan, Fall 2025
-University of Windsor
+Built as part of the COMP-4220: Agile Software Development course
+- Dr. Xiaobu Yuan, Fall 2025
+- University of Windsor
